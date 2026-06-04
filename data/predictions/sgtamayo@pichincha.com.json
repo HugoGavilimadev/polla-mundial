@@ -1,0 +1,664 @@
+{
+  "name": "Sebastian Tamayo",
+  "email": "sgtamayo@pichincha.com",
+  "data": {
+    "groups": {
+      "g0": [
+        {
+          "h": "México",
+          "a": "Sudáfrica",
+          "sh": "2",
+          "sa": "1"
+        },
+        {
+          "h": "Corea del Sur",
+          "a": "Chequia",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "México",
+          "a": "Corea del Sur",
+          "sh": "1",
+          "sa": "1"
+        },
+        {
+          "h": "Sudáfrica",
+          "a": "Chequia",
+          "sh": "0",
+          "sa": "0"
+        },
+        {
+          "h": "México",
+          "a": "Chequia",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Sudáfrica",
+          "a": "Corea del Sur",
+          "sh": "1",
+          "sa": "2"
+        }
+      ],
+      "g1": [
+        {
+          "h": "Canadá",
+          "a": "Bosnia y Herz.",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Qatar",
+          "a": "Suiza",
+          "sh": "0",
+          "sa": "2"
+        },
+        {
+          "h": "Canadá",
+          "a": "Qatar",
+          "sh": "1",
+          "sa": "1"
+        },
+        {
+          "h": "Bosnia y Herz.",
+          "a": "Suiza",
+          "sh": "0",
+          "sa": "3"
+        },
+        {
+          "h": "Canadá",
+          "a": "Suiza",
+          "sh": "2",
+          "sa": "2"
+        },
+        {
+          "h": "Bosnia y Herz.",
+          "a": "Qatar",
+          "sh": "0",
+          "sa": "1"
+        }
+      ],
+      "g2": [
+        {
+          "h": "Brasil",
+          "a": "Marruecos",
+          "sh": "3",
+          "sa": "0"
+        },
+        {
+          "h": "Haití",
+          "a": "Escocia",
+          "sh": "0",
+          "sa": "2"
+        },
+        {
+          "h": "Brasil",
+          "a": "Haití",
+          "sh": "4",
+          "sa": "0"
+        },
+        {
+          "h": "Marruecos",
+          "a": "Escocia",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Brasil",
+          "a": "Escocia",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "Marruecos",
+          "a": "Haití",
+          "sh": "1",
+          "sa": "0"
+        }
+      ],
+      "g3": [
+        {
+          "h": "Estados Unidos",
+          "a": "Paraguay",
+          "sh": "1",
+          "sa": "2"
+        },
+        {
+          "h": "Australia",
+          "a": "Turquía",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Estados Unidos",
+          "a": "Australia",
+          "sh": "1",
+          "sa": "1"
+        },
+        {
+          "h": "Paraguay",
+          "a": "Turquía",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "Estados Unidos",
+          "a": "Turquía",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Paraguay",
+          "a": "Australia",
+          "sh": "1",
+          "sa": "1"
+        }
+      ],
+      "g4": [
+        {
+          "h": "Alemania",
+          "a": "Curazao",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "Costa de Marfil",
+          "a": "Ecuador",
+          "sh": "0",
+          "sa": "1"
+        },
+        {
+          "h": "Alemania",
+          "a": "Costa de Marfil",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Curazao",
+          "a": "Ecuador",
+          "sh": "0",
+          "sa": "3"
+        },
+        {
+          "h": "Alemania",
+          "a": "Ecuador",
+          "sh": "1",
+          "sa": "1"
+        },
+        {
+          "h": "Curazao",
+          "a": "Costa de Marfil",
+          "sh": "0",
+          "sa": "2"
+        }
+      ],
+      "g5": [
+        {
+          "h": "Países Bajos",
+          "a": "Japón",
+          "sh": "2",
+          "sa": "1"
+        },
+        {
+          "h": "Suecia",
+          "a": "Túnez",
+          "sh": "0",
+          "sa": "0"
+        },
+        {
+          "h": "Países Bajos",
+          "a": "Suecia",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Japón",
+          "a": "Túnez",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Países Bajos",
+          "a": "Túnez",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "Japón",
+          "a": "Suecia",
+          "sh": "1",
+          "sa": "1"
+        }
+      ],
+      "g6": [
+        {
+          "h": "Bélgica",
+          "a": "Egipto",
+          "sh": "2",
+          "sa": "2"
+        },
+        {
+          "h": "Irán",
+          "a": "Nueva Zelanda",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Bélgica",
+          "a": "Irán",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Egipto",
+          "a": "Nueva Zelanda",
+          "sh": "1",
+          "sa": "1"
+        },
+        {
+          "h": "Bélgica",
+          "a": "Nueva Zelanda",
+          "sh": "1",
+          "sa": "1"
+        },
+        {
+          "h": "Egipto",
+          "a": "Irán",
+          "sh": "2",
+          "sa": "0"
+        }
+      ],
+      "g7": [
+        {
+          "h": "España",
+          "a": "Cabo Verde",
+          "sh": "4",
+          "sa": "0"
+        },
+        {
+          "h": "Arabia Saudita",
+          "a": "Uruguay",
+          "sh": "0",
+          "sa": "2"
+        },
+        {
+          "h": "España",
+          "a": "Arabia Saudita",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "Cabo Verde",
+          "a": "Uruguay",
+          "sh": "0",
+          "sa": "2"
+        },
+        {
+          "h": "España",
+          "a": "Uruguay",
+          "sh": "2",
+          "sa": "2"
+        },
+        {
+          "h": "Cabo Verde",
+          "a": "Arabia Saudita",
+          "sh": "0",
+          "sa": "0"
+        }
+      ],
+      "g8": [
+        {
+          "h": "Francia",
+          "a": "Senegal",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "Irak",
+          "a": "Noruega",
+          "sh": "1",
+          "sa": "1"
+        },
+        {
+          "h": "Francia",
+          "a": "Irak",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "Senegal",
+          "a": "Noruega",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Francia",
+          "a": "Noruega",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "Senegal",
+          "a": "Irak",
+          "sh": "1",
+          "sa": "1"
+        }
+      ],
+      "g9": [
+        {
+          "h": "Argentina",
+          "a": "Argelia",
+          "sh": "3",
+          "sa": "0"
+        },
+        {
+          "h": "Austria",
+          "a": "Jordania",
+          "sh": "1",
+          "sa": "1"
+        },
+        {
+          "h": "Argentina",
+          "a": "Austria",
+          "sh": "3",
+          "sa": "0"
+        },
+        {
+          "h": "Argelia",
+          "a": "Jordania",
+          "sh": "1",
+          "sa": "1"
+        },
+        {
+          "h": "Argentina",
+          "a": "Jordania",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "Argelia",
+          "a": "Austria",
+          "sh": "1",
+          "sa": "1"
+        }
+      ],
+      "g10": [
+        {
+          "h": "Portugal",
+          "a": "RD Congo",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "Uzbekistán",
+          "a": "Colombia",
+          "sh": "1",
+          "sa": "2"
+        },
+        {
+          "h": "Portugal",
+          "a": "Uzbekistán",
+          "sh": "3",
+          "sa": "0"
+        },
+        {
+          "h": "RD Congo",
+          "a": "Colombia",
+          "sh": "0",
+          "sa": "2"
+        },
+        {
+          "h": "Portugal",
+          "a": "Colombia",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "RD Congo",
+          "a": "Uzbekistán",
+          "sh": "1",
+          "sa": "1"
+        }
+      ],
+      "g11": [
+        {
+          "h": "Inglaterra",
+          "a": "Croacia",
+          "sh": "3",
+          "sa": "2"
+        },
+        {
+          "h": "Ghana",
+          "a": "Panamá",
+          "sh": "1",
+          "sa": "1"
+        },
+        {
+          "h": "Inglaterra",
+          "a": "Ghana",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Croacia",
+          "a": "Panamá",
+          "sh": "1",
+          "sa": "0"
+        },
+        {
+          "h": "Inglaterra",
+          "a": "Panamá",
+          "sh": "2",
+          "sa": "0"
+        },
+        {
+          "h": "Croacia",
+          "a": "Ghana",
+          "sh": "2",
+          "sa": "1"
+        }
+      ]
+    },
+    "r32": [
+      {
+        "h": "México",
+        "a": "Argelia",
+        "sh": "1",
+        "sa": "0"
+      },
+      {
+        "h": "Uruguay",
+        "a": "Francia",
+        "sh": "1",
+        "sa": "2"
+      },
+      {
+        "h": "Australia",
+        "a": "Estados Unidos",
+        "sh": "1",
+        "sa": "2"
+      },
+      {
+        "h": "Ecuador",
+        "a": "Croacia",
+        "sh": "2",
+        "sa": "1"
+      },
+      {
+        "h": "Canadá",
+        "a": "Irán",
+        "sh": "2",
+        "sa": "1"
+      },
+      {
+        "h": "Egipto",
+        "a": "Jordania",
+        "sh": "2",
+        "sa": "1"
+      },
+      {
+        "h": "Brasil",
+        "a": "Escocia",
+        "sh": "2",
+        "sa": "0"
+      },
+      {
+        "h": "Japón",
+        "a": "Portugal",
+        "sh": "1",
+        "sa": "2"
+      },
+      {
+        "h": "Corea del Sur",
+        "a": "Irak",
+        "sh": "1",
+        "sa": "1"
+      },
+      {
+        "h": "España",
+        "a": "Senegal",
+        "sh": "2",
+        "sa": "0"
+      },
+      {
+        "h": "Paraguay",
+        "a": "Qatar",
+        "sh": "2",
+        "sa": "0"
+      },
+      {
+        "h": "Alemania",
+        "a": "Inglaterra",
+        "sh": "2",
+        "sa": "2"
+      },
+      {
+        "h": "Suiza",
+        "a": "Suecia",
+        "sh": "2",
+        "sa": "1"
+      },
+      {
+        "h": "Bélgica",
+        "a": "Argentina",
+        "sh": "1",
+        "sa": "2"
+      },
+      {
+        "h": "Marruecos",
+        "a": "Costa de Marfil",
+        "sh": "1",
+        "sa": "2"
+      },
+      {
+        "h": "Países Bajos",
+        "a": "Colombia",
+        "sh": "2",
+        "sa": "1"
+      }
+    ],
+    "r16": [
+      {
+        "h": "México",
+        "a": "Francia",
+        "sh": "1",
+        "sa": "2"
+      },
+      {
+        "h": "Estados Unidos",
+        "a": "Ecuador",
+        "sh": "0",
+        "sa": "1"
+      },
+      {
+        "h": "Canadá",
+        "a": "Egipto",
+        "sh": "1",
+        "sa": "0"
+      },
+      {
+        "h": "Brasil",
+        "a": "Portugal",
+        "sh": "1",
+        "sa": "2"
+      },
+      {
+        "h": "Corea del Sur",
+        "a": "España",
+        "sh": "0",
+        "sa": "2"
+      },
+      {
+        "h": "Paraguay",
+        "a": "Alemania",
+        "sh": "1",
+        "sa": "2"
+      },
+      {
+        "h": "Suiza",
+        "a": "Argentina",
+        "sh": "0",
+        "sa": "2"
+      },
+      {
+        "h": "Costa de Marfil",
+        "a": "Países Bajos",
+        "sh": "0",
+        "sa": "1"
+      }
+    ],
+    "qf": [
+      {
+        "h": "Francia",
+        "a": "Ecuador",
+        "sh": "2",
+        "sa": "1"
+      },
+      {
+        "h": "Canadá",
+        "a": "Portugal",
+        "sh": "0",
+        "sa": "1"
+      },
+      {
+        "h": "España",
+        "a": "Alemania",
+        "sh": "1",
+        "sa": "0"
+      },
+      {
+        "h": "Argentina",
+        "a": "Países Bajos",
+        "sh": "1",
+        "sa": "2"
+      }
+    ],
+    "sf": [
+      {
+        "h": "Francia",
+        "a": "Portugal",
+        "sh": "1",
+        "sa": "2"
+      },
+      {
+        "h": "España",
+        "a": "Países Bajos",
+        "sh": "0",
+        "sa": "1"
+      }
+    ],
+    "final": {
+      "h": "Portugal",
+      "a": "Países Bajos",
+      "sh": "0",
+      "sa": "1"
+    },
+    "third": {
+      "h": "Francia",
+      "a": "España",
+      "sh": "2",
+      "sa": "1"
+    }
+  }
+}
