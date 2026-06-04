@@ -95,11 +95,11 @@ async function ghDel(path,sha){var body={message:'delete '+path,sha:sha,branch:G
 async function loadData(){showLoading('Cargando datos...');try{
   serverData.predictions=[];var files=await ghGet('data/predictions');
   if(files&&Array.isArray(files)){for(var i=0;i<files.length;i++){var f=files[i];if(f.name==='.gitkeep')continue;
-    var fc=await ghGet('data/predictions/'+f.name);if(!fc)continue;
-    var raw=decodeURIComponent(escape(atob(fc.content.replace(/\n/g,''))));var d=JSON.parse(raw);
+    var fc=await ghGet('data/predictions/'+f.name);if(!fc||!fc.content)continue;
+    var raw;try{raw=decodeURIComponent(escape(atob(fc.content.replace(/\n/g,''))))}catch(ex){continue}var d;try{d=JSON.parse(raw)}catch(ex){continue};
     serverData.predictions.push({name:d.name||'',email:d.email||'',data:d.data||{},file:f.name,sha:fc.sha})}}
   var adm=await ghGet('data/admin.json');
-  if(adm){var raw2=decodeURIComponent(escape(atob(adm.content.replace(/\n/g,''))));serverData.adminResults=JSON.parse(raw2);serverData.adminSha=adm.sha}
+if(adm&&adm.content){var raw2=decodeURIComponent(escape(atob(adm.content.replace(/\n/g,''))));serverData.adminResults=JSON.parse(raw2);serverData.adminSha=adm.sha}
   else{serverData.adminResults={};serverData.adminSha=null}
   updStats();refreshDash()
 }catch(err){console.error(err);showAlert('Error','No se pudieron cargar datos. Revisa la consola (F12).')}finally{hideLoading()}}
