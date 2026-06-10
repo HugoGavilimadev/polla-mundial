@@ -147,17 +147,136 @@ function renderAdminGroups(){var box=document.getElementById('adminResUI');if(!b
 function loadAdminInputs(){var ar=serverData.adminResults||{};var keys=Object.keys(ar);for(var i=0;i<keys.length;i++){var k=keys[i];var ea=document.getElementById('adm_'+k+'a');var eb=document.getElementById('adm_'+k+'b');if(ea&&ar[k].sh!==undefined)ea.value=ar[k].sh;if(eb&&ar[k].sa!==undefined)eb.value=ar[k].sa}}
 function collectAdminResults(){var res={};for(var gi=0;gi<GROUPS.length;gi++){var ms=getMatches(GROUPS[gi].t);for(var mi=0;mi<ms.length;mi++){var mid='g'+gi+'m'+mi;var ea=document.getElementById('adm_'+mid+'a');var eb=document.getElementById('adm_'+mid+'b');if(ea&&eb&&ea.value!==''&&eb.value!==''){res[mid]={sh:ea.value,sa:eb.value}}}}return res}
 async function saveAdminRes(){if(!needToken())return;var res=collectAdminResults();if(Object.keys(res).length===0){showAlert('Sin datos','Ingresa al menos un resultado.');return}showLoading('Guardando resultados...');try{var payload=JSON.stringify(res,null,2);await ghPut('data/admin.json',payload,serverData.adminSha);await loadData();loadAdminInputs();showAlert('Listo','Resultados guardados. Ranking actualizado.')}catch(err){showAlert('Error',err.message)}finally{hideLoading()}}
-function calcElim(){var allQ=[];for(var gi=0;gi<GROUPS.length;gi++){var g=GROUPS[gi],ms=getMatches(g.t),st={};
-  for(var ti=0;ti<g.t.length;ti++)st[g.t[ti].n]={t:g.t[ti],pts:0,gd:0,gf:0};var ok=true;
-  for(var mi=0;mi<ms.length;mi++){var ea=document.getElementById('g'+gi+'m'+mi+'a'),eb=document.getElementById('g'+gi+'m'+mi+'b');
-    if(!ea||!eb||ea.value===''||eb.value===''){ok=false;break}var a=parseInt(ea.value),b=parseInt(eb.value),ta=ms[mi][0].n,tb=ms[mi][1].n;
-    st[ta].gf+=a;st[ta].gd+=(a-b);st[tb].gf+=b;st[tb].gd+=(b-a);if(a>b){st[ta].pts+=3}else if(a<b){st[tb].pts+=3}else{st[ta].pts+=1;st[tb].pts+=1}}
-  if(!ok){showAlert('Faltan datos','Completa todos los marcadores del Grupo '+g.g);return}
-  var arr=Object.values(st).sort(function(x,y){return y.pts-x.pts||y.gd-x.gd||y.gf-x.gf});arr[0].grp=g.g;arr[1].grp=g.g;arr[2].grp=g.g;
-  allQ.push({first:arr[0],second:arr[1],third:arr[2]})}var thirds=allQ.map(function(q){return q.third}).sort(function(x,y){return y.pts-x.pts||y.gd-x.gd||y.gf-x.gf});
-  var best8=thirds.slice(0,8);var seeds=[];for(var i=0;i<12;i++){seeds.push(allQ[i].first);seeds.push(allQ[i].second)}
-  for(var i=0;i<8;i++)seeds.push(best8[i]);var r32=[];for(var i=0;i<R32_SEEDS.length;i++){var s=R32_SEEDS[i];r32.push([seeds[s[0]-1].t,seeds[s[1]-1].t])}
-  koData.r32=r32;renderKO('r32',r32,'r32Box');document.getElementById('sec_r32').classList.add('vis');document.getElementById('sec_r32').scrollIntoView({behavior:'smooth'})}
+function calcElim(){
+    var allQ=[];
+ 
+    for(var gi=0;gi<GROUPS.length;gi++){
+        var g=GROUPS[gi],
+            ms=getMatches(g.t),
+            st={};
+ 
+        for(var ti=0;ti<g.t.length;ti++){
+            st[g.t[ti].n]={
+                t:g.t[ti],
+                pts:0,
+                gd:0,
+                gf:0
+            };
+        }
+ 
+        var ok=true;
+ 
+        for(var mi=0;mi<ms.length;mi++){
+            var ea=document.getElementById('g'+gi+'m'+mi+'a'),
+                eb=document.getElementById('g'+gi+'m'+mi+'b');
+ 
+            if(!ea || !eb || ea.value==='' || eb.value===''){
+                ok=false;
+                break;
+            }
+ 
+            var a=parseInt(ea.value),
+                b=parseInt(eb.value),
+                ta=ms[mi][0].n,
+                tb=ms[mi][1].n;
+ 
+            st[ta].gf+=a;
+            st[ta].gd+=(a-b);
+ 
+            st[tb].gf+=b;
+            st[tb].gd+=(b-a);
+ 
+            if(a>b){
+                st[ta].pts+=3;
+            }else if(a<b){
+                st[tb].pts+=3;
+            }else{
+                st[ta].pts+=1;
+                st[tb].pts+=1;
+            }
+        }
+ 
+        if(!ok){
+            showAlert(
+                'Faltan datos',
+                'Completa todos los marcadores del Grupo '+g.g
+            );
+            return;
+        }
+ 
+        var arr=Object.values(st).sort(function(x,y){
+            return y.pts-x.pts || y.gd-x.gd || y.gf-x.gf;
+        });
+ 
+        arr[0].grp=g.g;
+        arr[1].grp=g.g;
+        arr[2].grp=g.g;
+ 
+        allQ.push({
+            first:arr[0],
+            second:arr[1],
+            third:arr[2]
+        });
+    }
+ 
+    var thirds=allQ
+        .map(function(q){
+            return q.third;
+        })
+        .sort(function(x,y){
+            return y.pts-x.pts || y.gd-x.gd || y.gf-x.gf;
+        });
+ 
+    var best8=thirds.slice(0,8);
+ 
+    var firsts=[],
+        seconds=[];
+ 
+    for(var i=0;i<12;i++){
+        firsts.push(allQ[i].first.t);
+        seconds.push(allQ[i].second.t);
+    }
+ 
+    var best8teams=best8.map(function(x){
+        return x.t;
+    });
+ 
+    var r32=[];
+ 
+    // 8 líderes vs 8 mejores terceros
+    for(var i=0;i<8;i++){
+        r32.push([
+            firsts[i],
+            best8teams[7-i]
+        ]);
+    }
+ 
+    // 4 líderes restantes vs sus segundos
+    for(var i=8;i<12;i++){
+        r32.push([
+            firsts[i],
+            seconds[i]
+        ]);
+    }
+ 
+    // Cruces entre segundos
+    for(var i=0;i<4;i++){
+        r32.push([
+            seconds[i],
+            seconds[i+4]
+        ]);
+    }
+ 
+    koData.r32=r32;
+ 
+    renderKO('r32',r32,'r32Box');
+ 
+    document.getElementById('sec_r32').classList.add('vis');
+ 
+    document.getElementById('sec_r32').scrollIntoView({
+        behavior:'smooth'
+    });
+}
 function renderKO(phase,matches,boxId){var box=document.getElementById(boxId);if(!box)return;var html='<div class="kg">';for(var i=0;i<matches.length;i++){var m=matches[i],mid=phase+'_'+i;html+='<div class="km"><div class="kl">Partido '+(i+1)+'</div>';html+='<div class="kt"><span class="kn">'+teamLbl(m[0])+'</span><input type="number" min="0" class="si" id="'+mid+'a"></div>';html+='<div class="kt"><span class="kn">'+teamLbl(m[1])+'</span><input type="number" min="0" class="si" id="'+mid+'b"></div></div>'}html+='</div>';box.innerHTML=html}
 function advUser(from,to,count){var matches=koData[from],winners=[];for(var i=0;i<matches.length;i++){var ea=document.getElementById(from+'_'+i+'a'),eb=document.getElementById(from+'_'+i+'b');if(!ea||!eb||ea.value===''||eb.value===''){showAlert('Faltan datos','Completa todos los marcadores.');return}var a=parseInt(ea.value),b=parseInt(eb.value);winners.push(a>=b?matches[i][0]:matches[i][1])}var next=[];for(var i=0;i<winners.length;i+=2)next.push([winners[i],winners[i+1]]);koData[to]=next;renderKO(to,next,to+'Box');document.getElementById('sec_'+to).classList.add('vis');document.getElementById('sec_'+to).scrollIntoView({behavior:'smooth'})}
 function advFinal(){var matches=koData.sf,w=[],l=[];for(var i=0;i<matches.length;i++){var ea=document.getElementById('sf_'+i+'a'),eb=document.getElementById('sf_'+i+'b');if(!ea||!eb||ea.value===''||eb.value===''){showAlert('Faltan datos','Completa semifinales.');return}var a=parseInt(ea.value),b=parseInt(eb.value);w.push(a>=b?matches[i][0]:matches[i][1]);l.push(a>=b?matches[i][1]:matches[i][0])}koData.final=[[w[0],w[1]]];koData.third=[[l[0],l[1]]];var box=document.getElementById('finalBox');if(!box)return;var html='<div class="kg">';html+='<div class="km"><div class="kl">&#127942; FINAL</div>';html+='<div class="kt"><span class="kn">'+teamLbl(w[0])+'</span><input type="number" min="0" class="si" id="fin_0a"></div>';html+='<div class="kt"><span class="kn">'+teamLbl(w[1])+'</span><input type="number" min="0" class="si" id="fin_0b"></div></div>';html+='<div class="km"><div class="kl">&#129353; TERCER PUESTO</div>';html+='<div class="kt"><span class="kn">'+teamLbl(l[0])+'</span><input type="number" min="0" class="si" id="trd_0a"></div>';html+='<div class="kt"><span class="kn">'+teamLbl(l[1])+'</span><input type="number" min="0" class="si" id="trd_0b"></div></div>';html+='</div>';box.innerHTML=html;document.getElementById('sec_final').classList.add('vis');document.getElementById('sec_sub').classList.add('vis');document.getElementById('sec_final').scrollIntoView({behavior:'smooth'})}
