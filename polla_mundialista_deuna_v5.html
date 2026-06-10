@@ -56,14 +56,9 @@ nav{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:10px}n
 <p style="color:var(--gr);margin-bottom:12px"><strong style="color:#e74c3c">&#9888; Una vez enviado NO se puede modificar.</strong> <strong style="color:var(--go)">&iexcl;Ecuador resaltado!</strong></p>
 <input type="text" class="fi" id="pName" placeholder="Tu nombre completo"></div>
 <div class="st">&#9917; FASE DE GRUPOS &mdash; 72 Partidos</div><div id="gBox"></div>
-<button class="btn go" onclick="calcElim()">&#128640; CALCULAR ELIMINATORIAS</button>
-<div class="ks" id="sec_r32"><div class="st">&#128293; DIECISEISAVOS</div><div id="r32Box"></div><button class="btn go" onclick="advUser('r32','r16',8)">Avanzar a Octavos</button></div>
-<div class="ks" id="sec_r16"><div class="st">&#9889; OCTAVOS</div><div id="r16Box"></div><button class="btn go" onclick="advUser('r16','qf',4)">Avanzar a Cuartos</button></div>
-<div class="ks" id="sec_qf"><div class="st">&#128165; CUARTOS</div><div id="qfBox"></div><button class="btn go" onclick="advUser('qf','sf',2)">Avanzar a Semis</button></div>
-<div class="ks" id="sec_sf"><div class="st">&#127775; SEMIFINALES</div><div id="sfBox"></div><button class="btn go" onclick="advFinal()">Avanzar a Final</button></div>
-<div class="ks" id="sec_final"><div class="st">&#127942; FINAL Y 3ER PUESTO</div><div id="finalBox"></div></div>
-<div class="ks" id="sec_sub" style="text-align:center"><button class="btn" onclick="submitAll()" style="animation:pu 2s infinite">&#128640; ENVIAR PRON&Oacute;STICO</button>
-<button class="btn pp" onclick="downloadPDF()">&#128196; IMPRIMIR</button></div></div></div>
+<div style="text-align:center;margin-top:20px" id="sec_sub">
+<button class="btn" onclick="submitAll()" style="animation:pu 2s infinite">&#128640; ENVIAR PRON&Oacute;STICO</button>
+<button class="btn pp" onclick="downloadPDF()">&#128196; IMPRIMIR</button></div>
 <div class="tab" id="tab_dash"><div class="ct"><h2 style="color:var(--g);text-align:center;margin-bottom:20px">&#127942; Dashboard &amp; Ranking</h2>
 <div class="sr"><div class="sc"><div class="n" id="dPart">0</div><div class="l">Participantes</div></div><div class="sc"><div class="n" id="dPlayed">0</div><div class="l">Resultados</div></div><div class="sc"><div class="n" id="dLeader">&mdash;</div><div class="l">L&iacute;der</div></div></div>
 <div class="cb"><h3 style="color:var(--g);margin-bottom:10px">Puntuaci&oacute;n</h3><div id="barChart"></div></div>
@@ -87,8 +82,10 @@ var GH_API='https://api.github.com';
 var GH_TOKEN='';
 var ADMIN_HASH='f8353696b246417b08c7d85fb02cc27c1995bf5789fcdb9697de5c98050a58b8';
 var serverData={predictions:[],adminResults:{},adminSha:null};
-var koData={r32:[],r16:[],qf:[],sf:[],final:[],third:[]};
 var lastScores=[];
+var DEADLINE=new Date('2026-06-11T19:00:00Z');
+function isPollaClosed(){return new Date()>=DEADLINE}
+function checkDeadline(){if(isPollaClosed()){var np=document.getElementById('navPred');if(np)np.style.display='none';var pt=document.getElementById('tab_pred');if(pt&&pt.classList.contains('active')){showTab('home')}}}
 async function sha256(msg){var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(msg));return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('')}
 function loadToken(){var t=localStorage.getItem('polla_gh_token');if(t){GH_TOKEN=t;var inp=document.getElementById('ghTokenInput');if(inp)inp.value=t;var sv=document.getElementById('tkSaved');if(sv)sv.style.display='inline'}}
 function saveToken(){var inp=document.getElementById('ghTokenInput');if(!inp||!inp.value.trim()){showAlert('Error','Pega tu token');return}GH_TOKEN=inp.value.trim();localStorage.setItem('polla_gh_token',GH_TOKEN);var sv=document.getElementById('tkSaved');if(sv)sv.style.display='inline';showAlert('Listo','Token guardado.')}
@@ -122,13 +119,12 @@ var GROUPS=[
 {g:'J',t:[{n:'Argentina',c:'ar'},{n:'Argelia',c:'dz'},{n:'Austria',c:'at'},{n:'Jordania',c:'jo'}]},
 {g:'K',t:[{n:'Portugal',c:'pt'},{n:'RD Congo',c:'cd'},{n:'Uzbekist\u00e1n',c:'uz'},{n:'Colombia',c:'co'}]},
 {g:'L',t:[{n:'Inglaterra',c:'gb-eng'},{n:'Croacia',c:'hr'},{n:'Ghana',c:'gh'},{n:'Panam\u00e1',c:'pa'}]}];
-var R32_SEEDS=[[1,32],[16,17],[8,25],[9,24],[4,29],[13,20],[5,28],[12,21],[2,31],[15,18],[7,26],[10,23],[3,30],[14,19],[6,27],[11,22]];
 function flagImg(c){return '<img class="fg" src="https://flagcdn.com/w40/'+c.replace('gb-eng','gb').replace('gb-sct','gb')+'.png" onerror="this.style.display=\'none\'">'}
 function teamLbl(t){return flagImg(t.c)+' <span>'+t.n+'</span>'}
 function getMatches(t){return[[t[0],t[1]],[t[2],t[3]],[t[0],t[2]],[t[1],t[3]],[t[0],t[3]],[t[1],t[2]]]}
 function isEc(t){return t.c==='ec'}
 function safeName(n){return n.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'')}
-function showTab(id){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('active')});var el=document.getElementById('tab_'+id);if(el)el.classList.add('active');var nb=document.getElementById('nav'+id.charAt(0).toUpperCase()+id.slice(1));if(nb)nb.classList.add('active');if(id==='dash')loadData()}
+function showTab(id){if(id==='pred'&&isPollaClosed()){showAlert('Cerrado','La polla se cerr\u00f3 el 11 de junio a las 2:00 PM (hora Ecuador). Ya no se pueden ingresar pron\u00f3sticos.');return}document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('active')});var el=document.getElementById('tab_'+id);if(el)el.classList.add('active');var nb=document.getElementById('nav'+id.charAt(0).toUpperCase()+id.slice(1));if(nb)nb.classList.add('active');if(id==='dash')loadData()}
 function renderGroups(){var box=document.getElementById('gBox');if(!box)return;var html='';
   for(var gi=0;gi<GROUPS.length;gi++){var g=GROUPS[gi],ms=getMatches(g.t),hasEc=g.t.some(isEc);
     html+='<div class="gc'+(hasEc?' ecg':'')+'">';html+='<div class="gt">Grupo '+g.g+' <span class="bd">';
@@ -147,141 +143,8 @@ function renderAdminGroups(){var box=document.getElementById('adminResUI');if(!b
 function loadAdminInputs(){var ar=serverData.adminResults||{};var keys=Object.keys(ar);for(var i=0;i<keys.length;i++){var k=keys[i];var ea=document.getElementById('adm_'+k+'a');var eb=document.getElementById('adm_'+k+'b');if(ea&&ar[k].sh!==undefined)ea.value=ar[k].sh;if(eb&&ar[k].sa!==undefined)eb.value=ar[k].sa}}
 function collectAdminResults(){var res={};for(var gi=0;gi<GROUPS.length;gi++){var ms=getMatches(GROUPS[gi].t);for(var mi=0;mi<ms.length;mi++){var mid='g'+gi+'m'+mi;var ea=document.getElementById('adm_'+mid+'a');var eb=document.getElementById('adm_'+mid+'b');if(ea&&eb&&ea.value!==''&&eb.value!==''){res[mid]={sh:ea.value,sa:eb.value}}}}return res}
 async function saveAdminRes(){if(!needToken())return;var res=collectAdminResults();if(Object.keys(res).length===0){showAlert('Sin datos','Ingresa al menos un resultado.');return}showLoading('Guardando resultados...');try{var payload=JSON.stringify(res,null,2);await ghPut('data/admin.json',payload,serverData.adminSha);await loadData();loadAdminInputs();showAlert('Listo','Resultados guardados. Ranking actualizado.')}catch(err){showAlert('Error',err.message)}finally{hideLoading()}}
-function calcElim(){
-    var allQ=[];
- 
-    for(var gi=0;gi<GROUPS.length;gi++){
-        var g=GROUPS[gi],
-            ms=getMatches(g.t),
-            st={};
- 
-        for(var ti=0;ti<g.t.length;ti++){
-            st[g.t[ti].n]={
-                t:g.t[ti],
-                pts:0,
-                gd:0,
-                gf:0
-            };
-        }
- 
-        var ok=true;
- 
-        for(var mi=0;mi<ms.length;mi++){
-            var ea=document.getElementById('g'+gi+'m'+mi+'a'),
-                eb=document.getElementById('g'+gi+'m'+mi+'b');
- 
-            if(!ea || !eb || ea.value==='' || eb.value===''){
-                ok=false;
-                break;
-            }
- 
-            var a=parseInt(ea.value),
-                b=parseInt(eb.value),
-                ta=ms[mi][0].n,
-                tb=ms[mi][1].n;
- 
-            st[ta].gf+=a;
-            st[ta].gd+=(a-b);
- 
-            st[tb].gf+=b;
-            st[tb].gd+=(b-a);
- 
-            if(a>b){
-                st[ta].pts+=3;
-            }else if(a<b){
-                st[tb].pts+=3;
-            }else{
-                st[ta].pts+=1;
-                st[tb].pts+=1;
-            }
-        }
- 
-        if(!ok){
-            showAlert(
-                'Faltan datos',
-                'Completa todos los marcadores del Grupo '+g.g
-            );
-            return;
-        }
- 
-        var arr=Object.values(st).sort(function(x,y){
-            return y.pts-x.pts || y.gd-x.gd || y.gf-x.gf;
-        });
- 
-        arr[0].grp=g.g;
-        arr[1].grp=g.g;
-        arr[2].grp=g.g;
- 
-        allQ.push({
-            first:arr[0],
-            second:arr[1],
-            third:arr[2]
-        });
-    }
- 
-    var thirds=allQ
-        .map(function(q){
-            return q.third;
-        })
-        .sort(function(x,y){
-            return y.pts-x.pts || y.gd-x.gd || y.gf-x.gf;
-        });
- 
-    var best8=thirds.slice(0,8);
- 
-    var firsts=[],
-        seconds=[];
- 
-    for(var i=0;i<12;i++){
-        firsts.push(allQ[i].first.t);
-        seconds.push(allQ[i].second.t);
-    }
- 
-    var best8teams=best8.map(function(x){
-        return x.t;
-    });
- 
-    var r32=[];
- 
-    // 8 líderes vs 8 mejores terceros
-    for(var i=0;i<8;i++){
-        r32.push([
-            firsts[i],
-            best8teams[7-i]
-        ]);
-    }
- 
-    // 4 líderes restantes vs sus segundos
-    for(var i=8;i<12;i++){
-        r32.push([
-            firsts[i],
-            seconds[i]
-        ]);
-    }
- 
-    // Cruces entre segundos
-    for(var i=0;i<4;i++){
-        r32.push([
-            seconds[i],
-            seconds[i+4]
-        ]);
-    }
- 
-    koData.r32=r32;
- 
-    renderKO('r32',r32,'r32Box');
- 
-    document.getElementById('sec_r32').classList.add('vis');
- 
-    document.getElementById('sec_r32').scrollIntoView({
-        behavior:'smooth'
-    });
-}
-function renderKO(phase,matches,boxId){var box=document.getElementById(boxId);if(!box)return;var html='<div class="kg">';for(var i=0;i<matches.length;i++){var m=matches[i],mid=phase+'_'+i;html+='<div class="km"><div class="kl">Partido '+(i+1)+'</div>';html+='<div class="kt"><span class="kn">'+teamLbl(m[0])+'</span><input type="number" min="0" class="si" id="'+mid+'a"></div>';html+='<div class="kt"><span class="kn">'+teamLbl(m[1])+'</span><input type="number" min="0" class="si" id="'+mid+'b"></div></div>'}html+='</div>';box.innerHTML=html}
-function advUser(from,to,count){var matches=koData[from],winners=[];for(var i=0;i<matches.length;i++){var ea=document.getElementById(from+'_'+i+'a'),eb=document.getElementById(from+'_'+i+'b');if(!ea||!eb||ea.value===''||eb.value===''){showAlert('Faltan datos','Completa todos los marcadores.');return}var a=parseInt(ea.value),b=parseInt(eb.value);winners.push(a>=b?matches[i][0]:matches[i][1])}var next=[];for(var i=0;i<winners.length;i+=2)next.push([winners[i],winners[i+1]]);koData[to]=next;renderKO(to,next,to+'Box');document.getElementById('sec_'+to).classList.add('vis');document.getElementById('sec_'+to).scrollIntoView({behavior:'smooth'})}
-function advFinal(){var matches=koData.sf,w=[],l=[];for(var i=0;i<matches.length;i++){var ea=document.getElementById('sf_'+i+'a'),eb=document.getElementById('sf_'+i+'b');if(!ea||!eb||ea.value===''||eb.value===''){showAlert('Faltan datos','Completa semifinales.');return}var a=parseInt(ea.value),b=parseInt(eb.value);w.push(a>=b?matches[i][0]:matches[i][1]);l.push(a>=b?matches[i][1]:matches[i][0])}koData.final=[[w[0],w[1]]];koData.third=[[l[0],l[1]]];var box=document.getElementById('finalBox');if(!box)return;var html='<div class="kg">';html+='<div class="km"><div class="kl">&#127942; FINAL</div>';html+='<div class="kt"><span class="kn">'+teamLbl(w[0])+'</span><input type="number" min="0" class="si" id="fin_0a"></div>';html+='<div class="kt"><span class="kn">'+teamLbl(w[1])+'</span><input type="number" min="0" class="si" id="fin_0b"></div></div>';html+='<div class="km"><div class="kl">&#129353; TERCER PUESTO</div>';html+='<div class="kt"><span class="kn">'+teamLbl(l[0])+'</span><input type="number" min="0" class="si" id="trd_0a"></div>';html+='<div class="kt"><span class="kn">'+teamLbl(l[1])+'</span><input type="number" min="0" class="si" id="trd_0b"></div></div>';html+='</div>';box.innerHTML=html;document.getElementById('sec_final').classList.add('vis');document.getElementById('sec_sub').classList.add('vis');document.getElementById('sec_final').scrollIntoView({behavior:'smooth'})}
-function collectAll(){var d={groups:{}};for(var gi=0;gi<GROUPS.length;gi++){var ms=getMatches(GROUPS[gi].t);for(var mi=0;mi<ms.length;mi++){var ea=document.getElementById('g'+gi+'m'+mi+'a'),eb=document.getElementById('g'+gi+'m'+mi+'b');var key='g'+gi+'m'+mi;d.groups[key]={h:ms[mi][0].n,a:ms[mi][1].n,sh:ea?ea.value:'',sa:eb?eb.value:''}}}var phases=['r32','r16','qf','sf'];for(var pi=0;pi<phases.length;pi++){var ph=phases[pi];d[ph]={};if(koData[ph])for(var i=0;i<koData[ph].length;i++){var ea=document.getElementById(ph+'_'+i+'a'),eb=document.getElementById(ph+'_'+i+'b');d[ph][ph+'_'+i]={h:koData[ph][i][0].n,a:koData[ph][i][1].n,sh:ea?ea.value:'',sa:eb?eb.value:''}}}var fa=document.getElementById('fin_0a'),fb=document.getElementById('fin_0b'),ta=document.getElementById('trd_0a'),tb=document.getElementById('trd_0b');if(koData.final&&koData.final[0])d.final={h:koData.final[0][0].n,a:koData.final[0][1].n,sh:fa?fa.value:'',sa:fb?fb.value:''};if(koData.third&&koData.third[0])d.third={h:koData.third[0][0].n,a:koData.third[0][1].n,sh:ta?ta.value:'',sa:tb?tb.value:''};return d}
-async function submitAll(){if(!needToken())return;var name=document.getElementById('pName').value.trim();if(!name){showAlert('Falta nombre','Ingresa tu nombre.');return}
+function collectAll(){var d={groups:{}};for(var gi=0;gi<GROUPS.length;gi++){var ms=getMatches(GROUPS[gi].t);for(var mi=0;mi<ms.length;mi++){var ea=document.getElementById('g'+gi+'m'+mi+'a'),eb=document.getElementById('g'+gi+'m'+mi+'b');var key='g'+gi+'m'+mi;d.groups[key]={h:ms[mi][0].n,a:ms[mi][1].n,sh:ea?ea.value:'',sa:eb?eb.value:''}}}return d}
+async function submitAll(){if(isPollaClosed()){showAlert('Cerrado','La polla se cerr\u00f3 a las 2:00 PM (hora Ecuador). No se aceptan m\u00e1s pron\u00f3sticos.');return}if(!needToken())return;var name=document.getElementById('pName').value.trim();if(!name){showAlert('Falta nombre','Ingresa tu nombre.');return}
   var fileName=safeName(name)+'.json';var path='data/predictions/'+fileName;showLoading('Verificando...');
   try{var existing=await ghGet(path);if(existing){hideLoading();showAlert('Ya registrado','Ya existe un pronostico con el nombre "'+name+'". Solo el administrador puede modificarlo o eliminarlo.');return}
   var predData=collectAll();showLoading('Guardando pronostico...');var payload=JSON.stringify({name:name,data:predData},null,2);
@@ -305,4 +168,5 @@ function confetti(){var colors=['#662d91','#38c09e','#ffd700','#ff6b6b','#4ecdc4
 loadToken();
 renderGroups();
 loadData();
+checkDeadline();
 </script></body></html>
