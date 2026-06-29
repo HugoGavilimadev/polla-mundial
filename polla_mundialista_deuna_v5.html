@@ -143,6 +143,11 @@ footer{text-align:center;padding:20px;color:var(--gr);font-size:.75rem;border-to
 <button class="btn pp" onclick="downloadPDF()">🖨️ IMPRIMIR</button></div>
 </div></div>
 <div class="tab" id="tab_dash"><div class="ct"><h2 style="color:var(--g);text-align:center;margin-bottom:20px">📊 Dashboard & Ranking</h2>
+<div class="tk" style="margin-bottom:20px"><h4>🔑 Token GitHub (necesario para guardar tu bracket)</h4>
+<input type="password" id="ghTokenInput" placeholder="Pega aquí el token compartido por el admin">
+<button class="btn sm" onclick="saveToken()" style="margin-top:6px">💾 Guardar token</button>
+<span class="saved" id="tkSaved"> ✓ Token guardado</span>
+<small>📌 Pídele el token al administrador. Se guarda solo en tu navegador y se necesita para que puedas registrar tu pronóstico.</small></div>
 <div class="sr"><div class="sc"><div class="n" id="dPart">0</div><div class="l">Participantes</div></div><div class="sc"><div class="n" id="dPlayed">0</div><div class="l">Resultados</div></div><div class="sc"><div class="n" id="dLeader">—</div><div class="l">Líder</div></div></div>
 <div class="cb"><h3 style="color:var(--g);margin-bottom:10px">Puntuación</h3><div id="barChart"></div></div>
 <div style="overflow-x:auto"><table class="rt"><thead><tr><th>#</th><th>Nombre</th><th>Grupos</th><th>KO</th><th>Total</th><th>Bracket</th></tr></thead><tbody id="rankBody"></tbody></table></div>
@@ -329,7 +334,7 @@ function showTab(id){
   if(el)el.classList.add('active');
   var nb=document.getElementById('nav'+id.charAt(0).toUpperCase()+id.slice(1));
   if(nb)nb.classList.add('active');
-  if(id==='dash')loadData();
+  if(id==='dash'){loadData();loadToken();}
 }
 
 function renderGroups(){
