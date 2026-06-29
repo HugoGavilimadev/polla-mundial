@@ -195,6 +195,10 @@ var OFFICIAL_R32=[
 [{n:'Colombia',c:'co'},{n:'Ghana',c:'gh'}]
 ];
 
+var BRACKET_R16=[[0,3],[2,5],[1,4],[6,7],[11,10],[9,8],[14,13],[12,15]];
+var BRACKET_QF=[[0,1],[2,3],[4,5],[6,7]];
+var BRACKET_SF=[[0,1],[2,3]];
+
 var KO_SCORING={r32:{w:2,e:5},r16:{w:3,e:8},qf:{w:5,e:12},sf:{w:8,e:18},third:{w:10,e:20},final:{w:15,e:30}};
 
 var GROUPS=[
@@ -243,7 +247,7 @@ function saveToken(){
 }
 
 function needToken(){
-  if(!GH_TOKEN){showAlert('Token requerido','Ingresa tu token en Pronóstico.');return false}
+  if(!GH_TOKEN){showAlert('Token requerido','Necesitas el token de GitHub para guardar.');return false}
   return true;
 }
 
@@ -317,10 +321,6 @@ function isEc(t){return t.c==='ec'}
 function safeName(n){return n.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'')}
 
 function showTab(id){
-  if(id==='pred'&&isPollaClosed()){
-    showAlert('Cerrado','La polla cerró el 11 de junio.');
-    return;
-  }
   var tabs=document.querySelectorAll('.tab');
   for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');
   var btns=document.querySelectorAll('nav button');
@@ -421,42 +421,6 @@ async function saveAdminRes(){
   finally{hideLoading()}
 }
 
-function collectAll(){
-  var d={groups:{}};
-  for(var gi=0;gi<GROUPS.length;gi++){
-    var ms=getMatches(GROUPS[gi].t);
-    for(var mi=0;mi<ms.length;mi++){
-      var ea=document.getElementById('g'+gi+'m'+mi+'a');
-      var eb=document.getElementById('g'+gi+'m'+mi+'b');
-      var key='g'+gi+'m'+mi;
-      d.groups[key]={h:ms[mi][0].n,a:ms[mi][1].n,sh:ea?ea.value:'',sa:eb?eb.value:''};
-    }
-  }
-  return d;
-}
-
-async function submitAll(){
-  if(isPollaClosed()){showAlert('Cerrado','La polla cerró el 11 de junio.');return}
-  if(!needToken())return;
-  var name=document.getElementById('pName').value.trim();
-  if(!name){showAlert('Falta nombre','Ingresa tu nombre.');return}
-  var fileName=safeName(name)+'.json';
-  var path='data/predictions/'+fileName;
-  showLoading('Verificando...');
-  try{
-    var existing=await ghGet(path);
-    if(existing){hideLoading();showAlert('Ya registrado','Ya existe un pronóstico con ese nombre.');return}
-    var predData=collectAll();
-    showLoading('Guardando...');
-    var payload=JSON.stringify({name:name,data:predData},null,2);
-    await ghPut(path,payload,null);
-    await loadData();
-    confetti();
-    showAlert('¡Listo!','Tu pronóstico se guardó.');
-  }catch(err){console.error(err);showAlert('Error',err.message)}
-  finally{hideLoading()}
-}
-
 function downloadPDF(){window.print()}
 
 async function loginAdmin(){
@@ -541,7 +505,9 @@ function getKoTeams(phase){
       winners.push(pickWinner(OFFICIAL_R32[i],sh,sa));
     }
     var pairs=[];
-    for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    for(var j=0;j<BRACKET_R16.length;j++){
+      pairs.push([winners[BRACKET_R16[j][0]],winners[BRACKET_R16[j][1]]]);
+    }
     return pairs;
   }
   if(phase==='qf'){
@@ -557,7 +523,9 @@ function getKoTeams(phase){
       winners.push(pickWinner(r16t[i],sh,sa));
     }
     var pairs=[];
-    for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    for(var j=0;j<BRACKET_QF.length;j++){
+      pairs.push([winners[BRACKET_QF[j][0]],winners[BRACKET_QF[j][1]]]);
+    }
     return pairs;
   }
   if(phase==='sf'){
@@ -573,7 +541,9 @@ function getKoTeams(phase){
       winners.push(pickWinner(qft[i],sh,sa));
     }
     var pairs=[];
-    for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    for(var j=0;j<BRACKET_SF.length;j++){
+      pairs.push([winners[BRACKET_SF[j][0]],winners[BRACKET_SF[j][1]]]);
+    }
     return pairs;
   }
   if(phase==='final'){
@@ -729,7 +699,9 @@ function getBracketKoTeams(phase){
       winners.push(pickWinner(OFFICIAL_R32[i],sh,sa));
     }
     var pairs=[];
-    for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    for(var j=0;j<BRACKET_R16.length;j++){
+      pairs.push([winners[BRACKET_R16[j][0]],winners[BRACKET_R16[j][1]]]);
+    }
     return pairs;
   }
   if(phase==='qf'){
@@ -744,7 +716,9 @@ function getBracketKoTeams(phase){
       winners.push(pickWinner(r16t[i],sh,sa));
     }
     var pairs=[];
-    for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    for(var j=0;j<BRACKET_QF.length;j++){
+      pairs.push([winners[BRACKET_QF[j][0]],winners[BRACKET_QF[j][1]]]);
+    }
     return pairs;
   }
   if(phase==='sf'){
@@ -759,7 +733,9 @@ function getBracketKoTeams(phase){
       winners.push(pickWinner(qft[i],sh,sa));
     }
     var pairs=[];
-    for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    for(var j=0;j<BRACKET_SF.length;j++){
+      pairs.push([winners[BRACKET_SF[j][0]],winners[BRACKET_SF[j][1]]]);
+    }
     return pairs;
   }
   if(phase==='final'){
