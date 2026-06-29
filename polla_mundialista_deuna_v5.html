@@ -360,7 +360,7 @@ async function loadData(){
         try{
           var r=await fetch(f.download_url);
           var d=await r.json();
-          serverData.predictions.push({name:d.name||'',data:d.data||{},file:f.name,sha:f.sha});
+          serverData.predictions.push({name:d.name||'',area:d.area||'',is_guest:!!d.is_guest,data:d.data||{},file:f.name,sha:f.sha});
         }catch(ex){console.warn('Skip:',f.name)}
       }
     }
@@ -602,25 +602,36 @@ async function loginAdmin(){
 }
 
 function renderAdminUsers(){
-  var box=document.getElementById('userList');
-  if(!box)return;
+  var boxDeuna=document.getElementById('userList');
+  var boxGuests=document.getElementById('userListGuests');
+  if(!boxDeuna)return;
+  
   var preds=serverData.predictions;
-  if(!preds.length){box.innerHTML='<p style="color:var(--gr)">No hay participantes aún.</p>';return}
-  var html='';
+  var deunaList='',guestsList='';
+  
   for(var i=0;i<preds.length;i++){
     var p=preds[i];
     var d=p.data||{};
     var hasKo=!!d.ko_predictions;
     var unlocked=!!d.ko_unlock;
-    html+='<div class="ui"><div class="uf"><strong>'+p.name+'</strong><small>'+p.file+(hasKo?' • ✓ Bracket enviado':'')+(unlocked?' • 🔓 Desbloqueado':'')+'</small></div>';
-    html+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
+    var isGuest=p.file&&p.file.indexOf('guest_')===0;
+    
+    var row='<div class="ui"><div class="uf"><strong>'+p.name+'</strong><small>'+p.file;
+    if(isGuest&&p.area)row+=' • '+p.area;
+    if(hasKo)row+=' • ✓ Bracket enviado';
+    if(unlocked)row+=' • 🔓 Desbloqueado';
+    row+='</small></div><div style="display:flex;gap:5px;flex-wrap:wrap">';
     if(hasKo&&!unlocked){
-      html+='<button class="btn-ko unlock" onclick="unlockUserBracket(\''+p.file+'\',\''+p.sha+'\')">🔓 Desbloquear</button>';
+      row+='<button class="btn-ko unlock" onclick="unlockUserBracket(\''+p.file+'\',\''+p.sha+'\')">🔓 Desbloquear</button>';
     }
-    html+='<button class="btn sm rd" onclick="deleteUserGH(\''+p.file+'\',\''+p.sha+'\')">×</button>';
-    html+='</div></div>';
+    row+='<button class="btn sm rd" onclick="deleteUserGH(\''+p.file+'\',\''+p.sha+'\')">×</button></div></div>';
+    
+    if(isGuest)guestsList+=row;
+    else deunaList+=row;
   }
-  box.innerHTML=html;
+  
+  boxDeuna.innerHTML=deunaList||'<p style="color:var(--gr)">No hay participantes DEUNA aún.</p>';
+  if(boxGuests)boxGuests.innerHTML=guestsList||'<p style="color:var(--gr)">No hay invitados aún.</p>';
 }
 
 async function deleteUserGH(file,sha){
@@ -1476,47 +1487,76 @@ function calcKoScore(pd){
 }
 
 function calcScores(){
-  var results=[];
+  var deuna=[],guests=[];
   var maxG=getMaxGroupsScore();
   var maxKo=getMaxKoScore();
+  
   for(var pi=0;pi<serverData.predictions.length;pi++){
     var p=serverData.predictions[pi];
     var pd=p.data||{};
-    var gScore=calcGroupsScore(pd);
-    var koScore=calcKoScore(pd);
-    var gNorm=maxG>0?(gScore.pts/maxG)*50:0;
-    var koNorm=maxKo>0?(koScore.pts/maxKo)*50:0;
-    var total=Math.round((gNorm+koNorm)*10)/10;
-    results.push({
-      name:p.name,file:p.file,sha:p.sha,data:pd,
-      gPts:gScore.pts,gExact:gScore.exact,gRes:gScore.res,
-      koPts:koScore.pts,koExact:koScore.exact,koRes:koScore.res,
-      gNorm:Math.round(gNorm*10)/10,koNorm:Math.round(koNorm*10)/10,total:total
-    });
+    var isGuest=!!p.data&&p.file&&p.file.indexOf('guest_')===0;
+    
+    if(isGuest){
+      // Invitados: 100% KO normalizado a 100
+      var koScore=calcKoScore(pd);
+      var total=maxKo>0?Math.round((koScore.pts/maxKo)*100*10)/10:0;
+      guests.push({
+        name:p.name,
+        area:p.area||'',
+        file:p.file,sha:p.sha,data:pd,
+        koPts:koScore.pts,koExact:koScore.exact,koRes:koScore.res,
+        total:total,
+        isGuest:true
+      });
+    }else{
+      // DEUNA: 50% grupos + 50% KO
+      var gScore=calcGroupsScore(pd);
+      var koScore=calcKoScore(pd);
+      var gNorm=maxG>0?(gScore.pts/maxG)*50:0;
+      var koNorm=maxKo>0?(koScore.pts/maxKo)*50:0;
+      var total=Math.round((gNorm+koNorm)*10)/10;
+      deuna.push({
+        name:p.name,file:p.file,sha:p.sha,data:pd,
+        gPts:gScore.pts,gExact:gScore.exact,gRes:gScore.res,
+        koPts:koScore.pts,koExact:koScore.exact,koRes:koScore.res,
+        gNorm:Math.round(gNorm*10)/10,koNorm:Math.round(koNorm*10)/10,total:total,
+        isGuest:false
+      });
+    }
   }
-  results.sort(function(a,b){return b.total-a.total||b.gPts-a.gPts||b.koPts-a.koPts});
-  lastScores=results;
-  return results;
+  
+  deuna.sort(function(a,b){return b.total-a.total||b.gPts-a.gPts||b.koPts-a.koPts});
+  guests.sort(function(a,b){return b.total-a.total||b.koPts-a.koPts});
+  
+  lastScores=deuna.concat(guests);
+  return {deuna:deuna,guests:guests,all:lastScores};
 }
-
 function refreshDash(){
-  var scores=calcScores();
-  var maxPts=scores.length>0?Math.max(scores[0].total,1):1;
+  var scoresObj=calcScores();
+  var deunaScores=scoresObj.deuna;
+  var guestScores=scoresObj.guests;
+  var allScores=scoresObj.all;
+  
+  // Gráfico de barras (top 15 general)
+  var maxPts=allScores.length>0?Math.max(allScores[0].total,1):1;
   var bc=document.getElementById('barChart');
   if(bc){
     var bh='';
-    var top=scores.slice(0,15);
+    var top=allScores.slice(0,15);
     for(var i=0;i<top.length;i++){
       var pct=Math.round(top[i].total/maxPts*100);
-      bh+='<div class="cbw"><span class="nm">'+top[i].name+'</span><div class="br"><div class="bi" style="width:'+pct+'%">'+top[i].total+'</div></div><span class="pt">'+top[i].total+'</span></div>';
+      var badge=top[i].isGuest?'<span class="guest-badge">BP</span>':'';
+      bh+='<div class="cbw"><span class="nm">'+top[i].name+badge+'</span><div class="br"><div class="bi" style="width:'+pct+'%">'+top[i].total+'</div></div><span class="pt">'+top[i].total+'</span></div>';
     }
     bc.innerHTML=bh||'<p style="color:var(--gr)">Aún no hay datos</p>';
   }
+  
+  // Tabla DEUNA
   var rb=document.getElementById('rankBody');
   if(rb){
     var rh='';
-    for(var i=0;i<scores.length;i++){
-      var s=scores[i];
+    for(var i=0;i<deunaScores.length;i++){
+      var s=deunaScores[i];
       var medal=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':'';
       var d=s.data||{};
       var hasKo=!!d.ko_predictions;
@@ -1530,6 +1570,37 @@ function refreshDash(){
     }
     rb.innerHTML=rh||'<tr><td colspan="6" style="text-align:center;color:var(--gr)">Sin datos</td></tr>';
   }
+  
+  // Tabla Banco Pichincha (invitados)
+  var rbg=document.getElementById('rankBodyGuests');
+  if(rbg){
+    var rhg='';
+    for(var i=0;i<guestScores.length;i++){
+      var s=guestScores[i];
+      var medal=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':'';
+      var d=s.data||{};
+      var hasKo=!!d.ko_predictions;
+      var btn=hasKo?'<button class="btn-ko done">✓ Enviado</button>':'<button class="btn-ko done">— Sin enviar</button>';
+      rhg+='<tr><td>'+medal+(i+1)+'</td><td>'+s.name+'</td><td>'+s.area+'</td><td><strong>'+s.total+'</strong></td><td>'+btn+'</td></tr>';
+    }
+    rbg.innerHTML=rhg||'<tr><td colspan="5" style="text-align:center;color:var(--gr)">Sin invitados aún</td></tr>';
+  }
+  
+  // Tabla General (DEUNA + Invitados juntos)
+  var rbgen=document.getElementById('rankBodyGeneral');
+  if(rbgen){
+    var rhgen='';
+    var allSorted=allScores.slice().sort(function(a,b){return b.total-a.total});
+    for(var i=0;i<allSorted.length;i++){
+      var s=allSorted[i];
+      var medal=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':'';
+      var empresa=s.isGuest?'<span class="guest-badge">🏛️ Banco Pichincha</span>':'<span class="deuna-badge">🟣 DEUNA</span>';
+      rhgen+='<tr><td>'+medal+(i+1)+'</td><td>'+s.name+'</td><td>'+empresa+'</td><td><strong>'+s.total+'</strong></td></tr>';
+    }
+    rbgen.innerHTML=rhgen||'<tr><td colspan="4" style="text-align:center;color:var(--gr)">Sin datos</td></tr>';
+  }
+  
+  // Stats arriba
   var dp=document.getElementById('dPart');
   if(dp)dp.textContent=serverData.predictions.length;
   var dd=document.getElementById('dPlayed');
@@ -1541,9 +1612,8 @@ function refreshDash(){
     dd.textContent=totalRes;
   }
   var dl2=document.getElementById('dLeader');
-  if(dl2)dl2.textContent=scores.length>0?scores[0].name:'—';
+  if(dl2)dl2.textContent=allScores.length>0?allScores[0].name:'—';
 }
-
 function updStats(){
   var el=document.getElementById('hPart');
   if(el)el.textContent=serverData.predictions.length;
@@ -1593,6 +1663,29 @@ function confetti(){
     d.style.borderRadius=Math.random()>.5?'50%':'0';
     document.body.appendChild(d);
     setTimeout(function(el){el.remove()},4000,d);
+  }
+}
+function switchRankTab(tab){
+  // Quitar active de todos los botones
+  document.getElementById('tabDeuna').classList.remove('active');
+  document.getElementById('tabBanco').classList.remove('active');
+  document.getElementById('tabGeneral').classList.remove('active');
+  
+  // Ocultar todas las tablas
+  document.getElementById('rankTabDeuna').style.display='none';
+  document.getElementById('rankTabBanco').style.display='none';
+  document.getElementById('rankTabGeneral').style.display='none';
+  
+  // Mostrar la seleccionada
+  if(tab==='deuna'){
+    document.getElementById('tabDeuna').classList.add('active');
+    document.getElementById('rankTabDeuna').style.display='block';
+  }else if(tab==='banco'){
+    document.getElementById('tabBanco').classList.add('active');
+    document.getElementById('rankTabBanco').style.display='block';
+  }else if(tab==='general'){
+    document.getElementById('tabGeneral').classList.add('active');
+    document.getElementById('rankTabGeneral').style.display='block';
   }
 }
 
