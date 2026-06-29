@@ -815,10 +815,8 @@ function renderBracketModal(){
   var fnt=getBracketKoTeams('final');if(fnt)html+=renderBracketPhase('final','🏆 FINAL',fnt);
   var tht=getBracketKoTeams('third');if(tht)html+=renderBracketPhase('third','🥉 3ER PUESTO',tht);
   body.innerHTML=html;
-  var hasAll=fnt&&tht&&bracketComplete('final')&&bracketComplete('third');
-  actions.innerHTML='<button class="btn" onclick="recalcBracket()">🔄 Calcular siguiente fase</button>'+(hasAll?'<button class="btn go" onclick="saveBracketKO()">💾 GUARDAR BRACKET</button>':'<p style="color:var(--gr);font-size:.85rem;margin-top:10px">Completa todas las fases para guardar.</p>');
+  actions.innerHTML='<button class="btn" onclick="recalcBracket()">🔄 Calcular siguiente fase</button><button class="btn go" onclick="saveBracketKO()">💾 GUARDAR BRACKET</button>';
 }
-
 function bracketComplete(phase){
   var matches;
   if(phase==='r32')matches=OFFICIAL_R32;
@@ -845,20 +843,50 @@ function recalcBracket(){
 
 async function saveBracketKO(){
   if(!needToken())return;
+  
+  // Forzar recálculo de todas las fases antes de guardar
+  var phases=['r32','r16','qf','sf','final','third'];
+  for(var p=0;p<phases.length;p++){
+    var ph=phases[p];
+    var matches;
+    if(ph==='r32')matches=OFFICIAL_R32;
+    else matches=getBracketKoTeams(ph);
+    if(matches){
+      var sTmp=collectBracketPhase(ph,matches);
+      bracketState[ph]=sTmp.data;
+    }
+  }
+  
   showLoading('Validando...');
   try{
-    var phases=['r32','r16','qf','sf','final','third'];
     var koPredictions={};
+    var faltantes=[];
+    
     for(var p=0;p<phases.length;p++){
       var ph=phases[p];
       var matches;
       if(ph==='r32')matches=OFFICIAL_R32;
       else matches=getBracketKoTeams(ph);
-      if(!matches){hideLoading();showAlert('Incompleto','Completa todas las fases.');return}
+      
+      if(!matches){
+        faltantes.push(ph.toUpperCase()+' (no se ha generado)');
+        continue;
+      }
+      
       var s=collectBracketPhase(ph,matches);
-      if(!s.complete){hideLoading();showAlert('Incompleto','Falta llenar marcadores en '+ph.toUpperCase());return}
+      if(!s.complete){
+        faltantes.push(ph.toUpperCase()+' (faltan marcadores)');
+        continue;
+      }
       koPredictions[ph]=s.data;
     }
+    
+    if(faltantes.length>0){
+      hideLoading();
+      showAlert('Bracket incompleto','Falta llenar: '+faltantes.join(', ')+'. Haz clic en "Calcular siguiente fase" para generar las fases pendientes.');
+      return;
+    }
+    
     showLoading('Guardando...');
     var info=await ghGet('data/predictions/'+currentBracketUser.file);
     if(!info){hideLoading();showAlert('Error','No se pudo recuperar el archivo.');return}
@@ -874,7 +902,7 @@ async function saveBracketKO(){
     await loadData();
     confetti();
     closeBracketModal();
-    showAlert('¡Listo!','Bracket guardado.');
+    showAlert('¡Listo!','Bracket guardado correctamente.');
   }catch(err){console.error(err);showAlert('Error',err.message)}
   finally{hideLoading()}
 }
