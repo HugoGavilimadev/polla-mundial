@@ -163,6 +163,7 @@ footer{text-align:center;padding:20px;color:var(--gr);font-size:.75rem;border-to
 </div></div></div></div>
 <footer>🏆 Polla Mundialista DEUNA 2026 — Advanced Analytics</footer>
 <script>
+<script>
 var GH_OWNER='sebastamayo3';
 var GH_REPO='polla-mundial';
 var GH_BRANCH='main';
@@ -211,6 +212,9 @@ var GROUPS=[
 {g:'J',t:[{n:'Argentina',c:'ar'},{n:'Argelia',c:'dz'},{n:'Austria',c:'at'},{n:'Jordania',c:'jo'}]},
 {g:'K',t:[{n:'Portugal',c:'pt'},{n:'RD Congo',c:'cd'},{n:'Uzbekistán',c:'uz'},{n:'Colombia',c:'co'}]},
 {g:'L',t:[{n:'Inglaterra',c:'gb-eng'},{n:'Croacia',c:'hr'},{n:'Ghana',c:'gh'},{n:'Panamá',c:'pa'}]}];
+
+function pickWinner(match,sh,sa){return sh>=sa?matchmatch[1]}
+function pickLoser(match,sh,sa){return sh>=sa?matchmatch[0]}
 
 function isKoClosed(){return new Date()>=KO_DEADLINE}
 function isPollaClosed(){return new Date()>=DEADLINE}
@@ -526,12 +530,11 @@ function getKoTeams(phase){
     if(!r32)return null;
     var winners=[];
     for(var i=0;i<OFFICIAL_R32.length;i++){
-      var k='r32_'+i;
-      var r=r32[k];
+      var r=r32['r32_'+i];
       if(!r||r.sh===''||r.sa==='')return null;
       var sh=parseInt(r.sh),sa=parseInt(r.sa);
       if(isNaN(sh)||isNaN(sa))return null;
-      winners.push(sh>=sa?OFFICIAL_R32[i]OFFICIAL_R32[i][1]);
+      winners.push(pickWinner(OFFICIAL_R32[i],sh,sa));
     }
     var pairs=[];
     for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
@@ -543,12 +546,11 @@ function getKoTeams(phase){
     if(!r16t||!r16res)return null;
     var winners=[];
     for(var i=0;i<r16t.length;i++){
-      var k='r16_'+i;
-      var r=r16res[k];
+      var r=r16res['r16_'+i];
       if(!r||r.sh===''||r.sa==='')return null;
       var sh=parseInt(r.sh),sa=parseInt(r.sa);
       if(isNaN(sh)||isNaN(sa))return null;
-      winners.push(sh>=sa?r16t[i]r16t[i][1]);
+      winners.push(pickWinner(r16t[i],sh,sa));
     }
     var pairs=[];
     for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
@@ -560,12 +562,11 @@ function getKoTeams(phase){
     if(!qft||!qfres)return null;
     var winners=[];
     for(var i=0;i<qft.length;i++){
-      var k='qf_'+i;
-      var r=qfres[k];
+      var r=qfres['qf_'+i];
       if(!r||r.sh===''||r.sa==='')return null;
       var sh=parseInt(r.sh),sa=parseInt(r.sa);
       if(isNaN(sh)||isNaN(sa))return null;
-      winners.push(sh>=sa?qft[i]qft[i][1]);
+      winners.push(pickWinner(qft[i],sh,sa));
     }
     var pairs=[];
     for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
@@ -577,12 +578,11 @@ function getKoTeams(phase){
     if(!sft||!sfres)return null;
     var winners=[];
     for(var i=0;i<sft.length;i++){
-      var k='sf_'+i;
-      var r=sfres[k];
+      var r=sfres['sf_'+i];
       if(!r||r.sh===''||r.sa==='')return null;
       var sh=parseInt(r.sh),sa=parseInt(r.sa);
       if(isNaN(sh)||isNaN(sa))return null;
-      winners.push(sh>=sa?sft[i]sft[i][1]);
+      winners.push(pickWinner(sft[i],sh,sa));
     }
     return [[winners[0],winners[1]]];
   }
@@ -592,12 +592,11 @@ function getKoTeams(phase){
     if(!sft||!sfres)return null;
     var losers=[];
     for(var i=0;i<sft.length;i++){
-      var k='sf_'+i;
-      var r=sfres[k];
+      var r=sfres['sf_'+i];
       if(!r||r.sh===''||r.sa==='')return null;
       var sh=parseInt(r.sh),sa=parseInt(r.sa);
       if(isNaN(sh)||isNaN(sa))return null;
-      losers.push(sh>=sa?sft[i]sft[i][0]);
+      losers.push(pickLoser(sft[i],sh,sa));
     }
     return [[losers[0],losers[1]]];
   }
@@ -705,7 +704,7 @@ function openBracketModal(file,sha){
     bracketState.third=d.ko_predictions.third||null;
   }
   document.getElementById('bkmodalTitle').textContent='Bracket — '+pred.name;
-  document.getElementById('bkmodalStatus').innerHTML='<div class="bkstatus">⚠️ Una vez enviado no podrás editarlo. Completa todo el bracket hasta Final y 3er puesto.</div>';
+  document.getElementById('bkmodalStatus').innerHTML='<div class="bkstatus">⚠️ Una vez enviado no podrás editarlo. Completa hasta Final y 3er puesto.</div>';
   renderBracketModal();
   document.getElementById('bkmodal').classList.add('vis');
 }
@@ -721,10 +720,9 @@ function getBracketKoTeams(phase){
     if(!s.complete)return null;
     var winners=[];
     for(var i=0;i<OFFICIAL_R32.length;i++){
-      var k='r32_'+i;
-      var r=s.data[k];
+      var r=s.data['r32_'+i];
       var sh=parseInt(r.sh),sa=parseInt(r.sa);
-      winners.push(sh>=sa?OFFICIAL_R32[i]OFFICIAL_R32[i][1]);
+      winners.push(pickWinner(OFFICIAL_R32[i],sh,sa));
     }
     var pairs=[];
     for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
@@ -737,10 +735,9 @@ function getBracketKoTeams(phase){
     if(!s.complete)return null;
     var winners=[];
     for(var i=0;i<r16t.length;i++){
-      var k='r16_'+i;
-      var r=s.data[k];
+      var r=s.data['r16_'+i];
       var sh=parseInt(r.sh),sa=parseInt(r.sa);
-      winners.push(sh>=sa?r16t[i]r16t[i][1]);
+      winners.push(pickWinner(r16t[i],sh,sa));
     }
     var pairs=[];
     for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
@@ -753,10 +750,9 @@ function getBracketKoTeams(phase){
     if(!s.complete)return null;
     var winners=[];
     for(var i=0;i<qft.length;i++){
-      var k='qf_'+i;
-      var r=s.data[k];
+      var r=s.data['qf_'+i];
       var sh=parseInt(r.sh),sa=parseInt(r.sa);
-      winners.push(sh>=sa?qft[i]qft[i][1]);
+      winners.push(pickWinner(qft[i],sh,sa));
     }
     var pairs=[];
     for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
@@ -769,10 +765,9 @@ function getBracketKoTeams(phase){
     if(!s.complete)return null;
     var winners=[];
     for(var i=0;i<sft.length;i++){
-      var k='sf_'+i;
-      var r=s.data[k];
+      var r=s.data['sf_'+i];
       var sh=parseInt(r.sh),sa=parseInt(r.sa);
-      winners.push(sh>=sa?sft[i]sft[i][1]);
+      winners.push(pickWinner(sft[i],sh,sa));
     }
     return [[winners[0],winners[1]]];
   }
@@ -783,10 +778,9 @@ function getBracketKoTeams(phase){
     if(!s.complete)return null;
     var losers=[];
     for(var i=0;i<sft.length;i++){
-      var k='sf_'+i;
-      var r=s.data[k];
+      var r=s.data['sf_'+i];
       var sh=parseInt(r.sh),sa=parseInt(r.sa);
-      losers.push(sh>=sa?sft[i]sft[i][0]);
+      losers.push(pickLoser(sft[i],sh,sa));
     }
     return [[losers[0],losers[1]]];
   }
@@ -842,7 +836,7 @@ function renderBracketModal(){
   var tht=getBracketKoTeams('third');if(tht)html+=renderBracketPhase('third','🥉 3ER PUESTO',tht);
   body.innerHTML=html;
   var hasAll=fnt&&tht&&bracketComplete('final')&&bracketComplete('third');
-  actions.innerHTML='<button class="btn" onclick="recalcBracket()">🔄 Calcular siguiente fase</button>'+(hasAll?'<button class="btn go" onclick="saveBracketKO()">💾 GUARDAR BRACKET</button>':'<p style="color:var(--gr);font-size:.85rem;margin-top:10px">Completa todas las fases hasta Final y 3er puesto para guardar.</p>');
+  actions.innerHTML='<button class="btn" onclick="recalcBracket()">🔄 Calcular siguiente fase</button>'+(hasAll?'<button class="btn go" onclick="saveBracketKO()">💾 GUARDAR BRACKET</button>':'<p style="color:var(--gr);font-size:.85rem;margin-top:10px">Completa todas las fases para guardar.</p>');
 }
 
 function bracketComplete(phase){
