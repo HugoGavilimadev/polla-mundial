@@ -224,12 +224,77 @@ html+='<span class="sw"><input type="number" min="0" class="si" id="'+mid+'a"><s
 html+='<span class="tn a">'+teamLbl(m[1])+'</span></div>'}
 html+='</div>'}
 box.innerHTML=html;loadAdminKoInputs()}
-function getKoTeams(phase){var ko=serverData.adminKo||{};if(phase==='r16'){var r32=ko.r32;if(!r32)return null;var winners=[];for(var i=0;i<OFFICIAL_R32.length;i++){var m=OFFICIAL_R32[i];var k='r32_'+i;var r=r32[k];if(!r||r.sh===''||r.sa==='')return null;var sh=parseInt(r.sh),sa=parseInt(r.sa);if(isNaN(sh)||isNaN(sa))return null;winners.push(sh>=sa?mm[1])}var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);return pairs}
-if(phase==='qf'){var r16=getKoTeams('r16');var r16res=ko.r16;if(!r16||!r16res)return null;var winners=[];for(var i=0;i<r16.length;i++){var k='r16_'+i;var r=r16res[k];if(!r||r.sh===''||r.sa==='')return null;var sh=parseInt(r.sh),sa=parseInt(r.sa);if(isNaN(sh)||isNaN(sa))return null;winners.push(sh>=sa?r16[i]r16[i][1])}var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);return pairs}
-if(phase==='sf'){var qf=getKoTeams('qf');var qfres=ko.qf;if(!qf||!qfres)return null;var winners=[];for(var i=0;i<qf.length;i++){var k='qf_'+i;var r=qfres[k];if(!r||r.sh===''||r.sa==='')return null;var sh=parseInt(r.sh),sa=parseInt(r.sa);if(isNaN(sh)||isNaN(sa))return null;winners.push(sh>=sa?qf[i]qf[i][1])}var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);return pairs}
-if(phase==='final'){var sf=getKoTeams('sf');var sfres=ko.sf;if(!sf||!sfres)return null;var winners=[];for(var i=0;i<sf.length;i++){var k='sf_'+i;var r=sfres[k];if(!r||r.sh===''||r.sa==='')return null;var sh=parseInt(r.sh),sa=parseInt(r.sa);if(isNaN(sh)||isNaN(sa))return null;winners.push(sh>=sa?sf[i]sf[i][1])}return[[winners[0],winners[1]]]}
-if(phase==='third'){var sf=getKoTeams('sf');var sfres=ko.sf;if(!sf||!sfres)return null;var losers=[];for(var i=0;i<sf.length;i++){var k='sf_'+i;var r=sfres[k];if(!r||r.sh===''||r.sa==='')return null;var sh=parseInt(r.sh),sa=parseInt(r.sa);if(isNaN(sh)||isNaN(sa))return null;losers.push(sh>=sa?sf[i]sf[i][0])}return[[losers[0],losers[1]]]}
-return null}
+function getKoTeams(phase){
+  var ko=serverData.adminKo||{};
+  if(phase==='r16'){
+    var r32=ko.r32;if(!r32)return null;
+    var winners=[];
+    for(var i=0;i<OFFICIAL_R32.length;i++){
+      var k='r32_'+i;var r=r32[k];
+      if(!r||r.sh===''||r.sa==='')return null;
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      if(isNaN(sh)||isNaN(sa))return null;
+      winners.push(sh>=sa?OFFICIAL_R32[i]OFFICIAL_R32[i][1]);
+    }
+    var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    return pairs;
+  }
+  if(phase==='qf'){
+    var r16=getKoTeams('r16');var r16res=ko.r16;
+    if(!r16||!r16res)return null;
+    var winners=[];
+    for(var i=0;i<r16.length;i++){
+      var k='r16_'+i;var r=r16res[k];
+      if(!r||r.sh===''||r.sa==='')return null;
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      if(isNaN(sh)||isNaN(sa))return null;
+      winners.push(sh>=sa?r16[i]r16[i][1]);
+    }
+    var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    return pairs;
+  }
+  if(phase==='sf'){
+    var qf=getKoTeams('qf');var qfres=ko.qf;
+    if(!qf||!qfres)return null;
+    var winners=[];
+    for(var i=0;i<qf.length;i++){
+      var k='qf_'+i;var r=qfres[k];
+      if(!r||r.sh===''||r.sa==='')return null;
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      if(isNaN(sh)||isNaN(sa))return null;
+      winners.push(sh>=sa?qf[i]qf[i][1]);
+    }
+    var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    return pairs;
+  }
+  if(phase==='final'){
+    var sf=getKoTeams('sf');var sfres=ko.sf;
+    if(!sf||!sfres)return null;
+    var winners=[];
+    for(var i=0;i<sf.length;i++){
+      var k='sf_'+i;var r=sfres[k];
+      if(!r||r.sh===''||r.sa==='')return null;
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      if(isNaN(sh)||isNaN(sa))return null;
+      winners.push(sh>=sa?sf[i]sf[i][1]);
+    }
+    return [[winners[0],winners[1]]];
+  }
+  if(phase==='third'){
+    var sf=getKoTeams('sf');var sfres=ko.sf;
+    if(!sf||!sfres)return null;
+    var losers=[];
+    for(var i=0;i<sf.length;i++){
+      var k='sf_'+i;var r=sfres[k];
+      if(!r||r.sh===''||r.sa==='')return null;
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      if(isNaN(sh)||isNaN(sa))return null;
+      losers.push(sh>=sa?sf[i]sf[i][0]);
+    }
+    return [[losers[0],losers[1]]];
+  }
+  return null;
+}
 function loadAdminKoInputs(){var ko=serverData.adminKo||{};var phases=['r32','r16','qf','sf','final','third'];for(var p=0;p<phases.length;p++){var ph=phases[p];var phRes=ko[ph]||{};var keys=Object.keys(phRes);for(var i=0;i<keys.length;i++){var k=keys[i];var ea=document.getElementById('adm_ko_'+k+'a');var eb=document.getElementById('adm_ko_'+k+'b');if(ea&&phRes[k].sh!==undefined)ea.value=phRes[k].sh;if(eb&&phRes[k].sa!==undefined)eb.value=phRes[k].sa}}}
 function collectAdminKo(){var res={};var phases=[{k:'r32',m:OFFICIAL_R32}];
 var r16=getKoTeams('r16');if(r16)phases.push({k:'r16',m:r16});
@@ -271,12 +336,75 @@ html+='</div>';
 var saved=bracketState[phase]||{};
 setTimeout(function(){var keys=Object.keys(saved);for(var k=0;k<keys.length;k++){var key=keys[k];var ea=document.getElementById('bk_'+key+'a');var eb=document.getElementById('bk_'+key+'b');if(ea&&saved[key].sh!==undefined)ea.value=saved[key].sh;if(eb&&saved[key].sa!==undefined)eb.value=saved[key].sa}},50);
 return html}
-function getBracketKoTeams(phase){if(phase==='r16'){var r32State=collectBracketPhase('r32',OFFICIAL_R32);if(!r32State.complete)return null;var winners=[];for(var i=0;i<OFFICIAL_R32.length;i++){var k='r32_'+i;var r=r32State.data[k];winners.push(r.sh>=r.sa?OFFICIAL_R32[i]OFFICIAL_R32[i][1])}var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);return pairs}
-if(phase==='qf'){var r16t=getBracketKoTeams('r16');if(!r16t)return null;var r16State=collectBracketPhase('r16',r16t);if(!r16State.complete)return null;var winners=[];for(var i=0;i<r16t.length;i++){var k='r16_'+i;var r=r16State.data[k];winners.push(r.sh>=r.sa?r16t[i]r16t[i][1])}var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);return pairs}
-if(phase==='sf'){var qft=getBracketKoTeams('qf');if(!qft)return null;var qfState=collectBracketPhase('qf',qft);if(!qfState.complete)return null;var winners=[];for(var i=0;i<qft.length;i++){var k='qf_'+i;var r=qfState.data[k];winners.push(r.sh>=r.sa?qft[i]qft[i][1])}var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);return pairs}
-if(phase==='final'){var sft=getBracketKoTeams('sf');if(!sft)return null;var sfState=collectBracketPhase('sf',sft);if(!sfState.complete)return null;var winners=[];for(var i=0;i<sft.length;i++){var k='sf_'+i;var r=sfState.data[k];winners.push(r.sh>=r.sa?sft[i]sft[i][1])}return[[winners[0],winners[1]]]}
-if(phase==='third'){var sft=getBracketKoTeams('sf');if(!sft)return null;var sfState=collectBracketPhase('sf',sft);if(!sfState.complete)return null;var losers=[];for(var i=0;i<sft.length;i++){var k='sf_'+i;var r=sfState.data[k];losers.push(r.sh>=r.sa?sft[i]sft[i][0])}return[[losers[0],losers[1]]]}
-return null}
+function getBracketKoTeams(phase){
+  if(phase==='r16'){
+    var r32State=collectBracketPhase('r32',OFFICIAL_R32);
+    if(!r32State.complete)return null;
+    var winners=[];
+    for(var i=0;i<OFFICIAL_R32.length;i++){
+      var k='r32_'+i;var r=r32State.data[k];
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      winners.push(sh>=sa?OFFICIAL_R32[i]OFFICIAL_R32[i][1]);
+    }
+    var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    return pairs;
+  }
+  if(phase==='qf'){
+    var r16t=getBracketKoTeams('r16');
+    if(!r16t)return null;
+    var r16State=collectBracketPhase('r16',r16t);
+    if(!r16State.complete)return null;
+    var winners=[];
+    for(var i=0;i<r16t.length;i++){
+      var k='r16_'+i;var r=r16State.data[k];
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      winners.push(sh>=sa?r16t[i]r16t[i][1]);
+    }
+    var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    return pairs;
+  }
+  if(phase==='sf'){
+    var qft=getBracketKoTeams('qf');
+    if(!qft)return null;
+    var qfState=collectBracketPhase('qf',qft);
+    if(!qfState.complete)return null;
+    var winners=[];
+    for(var i=0;i<qft.length;i++){
+      var k='qf_'+i;var r=qfState.data[k];
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      winners.push(sh>=sa?qft[i]qft[i][1]);
+    }
+    var pairs=[];for(var j=0;j<winners.length;j+=2)pairs.push([winners[j],winners[j+1]]);
+    return pairs;
+  }
+  if(phase==='final'){
+    var sft=getBracketKoTeams('sf');
+    if(!sft)return null;
+    var sfState=collectBracketPhase('sf',sft);
+    if(!sfState.complete)return null;
+    var winners=[];
+    for(var i=0;i<sft.length;i++){
+      var k='sf_'+i;var r=sfState.data[k];
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      winners.push(sh>=sa?sft[i]sft[i][1]);
+    }
+    return [[winners[0],winners[1]]];
+  }
+  if(phase==='third'){
+    var sft=getBracketKoTeams('sf');
+    if(!sft)return null;
+    var sfState=collectBracketPhase('sf',sft);
+    if(!sfState.complete)return null;
+    var losers=[];
+    for(var i=0;i<sft.length;i++){
+      var k='sf_'+i;var r=sfState.data[k];
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      losers.push(sh>=sa?sft[i]sft[i][0]);
+    }
+    return [[losers[0],losers[1]]];
+  }
+  return null;
+}
 function collectBracketPhase(phase,matches){var data={};var complete=true;for(var i=0;i<matches.length;i++){var ea=document.getElementById('bk_'+phase+'_'+i+'a');var eb=document.getElementById('bk_'+phase+'_'+i+'b');if(!ea||!eb||ea.value===''||eb.value===''){complete=false;continue}var sh=parseInt(ea.value),sa=parseInt(eb.value);if(isNaN(sh)||isNaN(sa)){complete=false;continue}data[phase+'_'+i]={sh:ea.value,sa:eb.value}}return{complete:complete,data:data}}
 function bracketComplete(phase){var matches;if(phase==='r32')matches=OFFICIAL_R32;else matches=getBracketKoTeams(phase);if(!matches)return false;var s=collectBracketPhase(phase,matches);return s.complete}
 function recalcBracket(){var phases=['r32','r16','qf','sf','final','third'];for(var p=0;p<phases.length;p++){var ph=phases[p];var matches;if(ph==='r32')matches=OFFICIAL_R32;else matches=getBracketKoTeams(ph);if(matches){var s=collectBracketPhase(ph,matches);bracketState[ph]=s.data}}renderBracketModal()}
