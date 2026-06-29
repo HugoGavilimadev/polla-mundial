@@ -145,7 +145,7 @@ footer{text-align:center;padding:20px;color:var(--gr);font-size:.75rem;border-to
 <small>📌 Pídele el token al administrador. Se guarda solo en tu navegador y se necesita para que puedas registrar tu pronóstico.</small></div>
 <div class="sr"><div class="sc"><div class="n" id="dPart">0</div><div class="l">Participantes</div></div><div class="sc"><div class="n" id="dPlayed">0</div><div class="l">Resultados</div></div><div class="sc"><div class="n" id="dLeader">—</div><div class="l">Líder</div></div></div>
 <div class="cb"><h3 style="color:var(--g);margin-bottom:10px">Puntuación</h3><div id="barChart"></div></div>
-<div style="overflow-x:auto"><table class="rt"><thead><tr><th>#</th><th>Nombre</th><th>Grupos</th><th>KO</th><th>Total</th><th>Bracket</th></tr></thead><tbody id="rankBody"></tbody></table></div>
+<div style="overflow-x:auto"><table class="rt"><thead><tr><th>#</th><th>Nombre</th><th>Fase Grupos</th><th>Fase Final</th><th>Total</th><th>Nuevo Pronóstico</th></tr></thead><tbody id="rankBody"></tbody></table></div>
 <div style="text-align:center;margin:14px 0"><button class="btn sm pp" onclick="exportCSV()">CSV</button><button class="btn sm pp" onclick="exportJSON()">JSON</button><button class="btn sm" onclick="loadData()">🔄 Actualizar</button></div>
 <div class="ap"><h3>🔐 Admin</h3><div class="al"><input type="password" id="adminPw" placeholder="Contraseña"><button onclick="loginAdmin()">Acceder</button></div>
 <div class="adc" id="adminC">
@@ -422,7 +422,98 @@ async function saveAdminRes(){
 }
 
 function downloadPDF(){window.print()}
-
+function downloadBracketPDF(){
+  if(!currentBracketUser){
+    showAlert('Error','No hay 2do Pronóstico abierto.');
+    return;
+  }
+  
+  // Forzar recálculo de fases
+  var phases=['r32','r16','qf','sf','final','third'];
+  for(var p=0;p<phases.length;p++){
+    var ph=phases[p];
+    var matches;
+    if(ph==='r32')matches=OFFICIAL_R32;
+    else matches=getBracketKoTeams(ph);
+    if(matches){
+      var sTmp=collectBracketPhase(ph,matches);
+      bracketState[ph]=sTmp.data;
+    }
+  }
+  
+  var w=window.open('','_blank');
+  if(!w){showAlert('Error','Habilita popups para descargar el PDF.');return}
+  
+  var fechaHora=new Date().toLocaleString('es-EC',{dateStyle:'long',timeStyle:'short'});
+  
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>2do Pronóstico - '+currentBracketUser.name+'</title>';
+  html+='<style>';
+  html+='body{font-family:Arial,sans-serif;padding:30px;color:#1a0a2e;max-width:800px;margin:0 auto}';
+  html+='h1{color:#662d91;text-align:center;border-bottom:3px solid #38c09e;padding-bottom:10px}';
+  html+='h2{color:#38c09e;margin-top:25px;border-left:4px solid #38c09e;padding-left:10px}';
+  html+='.header-info{background:#f5f0fa;padding:15px;border-radius:10px;margin-bottom:20px;text-align:center}';
+  html+='.header-info strong{color:#662d91;font-size:1.2rem}';
+  html+='.match{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #ddd;page-break-inside:avoid}';
+  html+='.team{flex:1;font-weight:600}';
+  html+='.team.home{text-align:right;padding-right:15px}';
+  html+='.team.away{text-align:left;padding-left:15px}';
+  html+='.score{background:#662d91;color:#fff;padding:5px 12px;border-radius:8px;font-weight:bold;min-width:60px;text-align:center;margin:0 10px}';
+  html+='.vs{color:#999;margin:0 8px}';
+  html+='.footer{margin-top:40px;text-align:center;color:#666;font-size:.85rem;border-top:1px solid #ddd;padding-top:15px}';
+  html+='.warning{background:#fff3cd;border:1px solid #ffd700;padding:10px;border-radius:8px;margin-top:20px;text-align:center;font-size:.9rem}';
+  html+='@media print{body{padding:15px}.match{page-break-inside:avoid}}';
+  html+='</style></head><body>';
+  
+  html+='<h1>🏆 POLLA MUNDIALISTA DEUNA 2026</h1>';
+  html+='<div class="header-info">';
+  html+='<strong>2do Pronóstico — '+currentBracketUser.name+'</strong><br>';
+  html+='<small>Generado el '+fechaHora+'</small>';
+  html+='</div>';
+  
+  var phasesInfo=[
+    {k:'r32',label:'🔥 16VOS DE FINAL',matches:OFFICIAL_R32},
+    {k:'r16',label:'⚡ OCTAVOS DE FINAL',matches:getBracketKoTeams('r16')},
+    {k:'qf',label:'💥 CUARTOS DE FINAL',matches:getBracketKoTeams('qf')},
+    {k:'sf',label:'🌟 SEMIFINALES',matches:getBracketKoTeams('sf')},
+    {k:'third',label:'🥉 TERCER PUESTO',matches:getBracketKoTeams('third')},
+    {k:'final',label:'🏆 FINAL',matches:getBracketKoTeams('final')}
+  ];
+  
+  for(var p=0;p<phasesInfo.length;p++){
+    var ph=phasesInfo[p];
+    if(!ph.matches)continue;
+    var state=bracketState[ph.k]||{};
+    
+    html+='<h2>'+ph.label+'</h2>';
+    for(var i=0;i<ph.matches.length;i++){
+      var m=ph.matches[i];
+      var key=ph.k+'_'+i;
+      var pred=state[key];
+      var sh=pred?pred.sh:'-';
+      var sa=pred?pred.sa:'-';
+      
+      html+='<div class="match">';
+      html+='<div class="team home">'+m[0].n+'</div>';
+      html+='<div class="score">'+sh+'</div>';
+      html+='<div class="vs">vs</div>';
+      html+='<div class="score">'+sa+'</div>';
+      html+='<div class="team away">'+m[1].n+'</div>';
+      html+='</div>';
+    }
+  }
+  
+  html+='<div class="warning">⚠️ Recuerda: este PDF es solo respaldo. Tu pronóstico oficial es el guardado en la plataforma.</div>';
+  html+='<div class="footer">';
+  html+='🏆 Polla Mundialista DEUNA 2026 — Advanced Analytics<br>';
+  html+='Participante: <strong>'+currentBracketUser.name+'</strong>';
+  html+='</div>';
+  
+  html+='<script>window.onload=function(){setTimeout(function(){window.print();},500);}<\/script>';
+  html+='</body></html>';
+  
+  w.document.write(html);
+  w.document.close();
+}
 async function loginAdmin(){
   var pw=document.getElementById('adminPw').value;
   var hash=await sha256(pw);
@@ -815,7 +906,7 @@ function renderBracketModal(){
   var fnt=getBracketKoTeams('final');if(fnt)html+=renderBracketPhase('final','🏆 FINAL',fnt);
   var tht=getBracketKoTeams('third');if(tht)html+=renderBracketPhase('third','🥉 3ER PUESTO',tht);
   body.innerHTML=html;
-  actions.innerHTML='<button class="btn" onclick="recalcBracket()">🔄 Calcular siguiente fase</button><button class="btn go" onclick="saveBracketKO()">💾 GUARDAR BRACKET</button>';
+  actions.innerHTML='<button class="btn" onclick="recalcBracket()">🔄 Calcular siguiente fase</button><button class="btn go" onclick="saveBracketKO()">💾 GUARDAR 2DO PRONÓSTICO</button><button class="btn pp" onclick="downloadBracketPDF()">📄 DESCARGAR PDF</button>';
 }
 function bracketComplete(phase){
   var matches;
