@@ -1068,10 +1068,8 @@ async function saveBracketKO(){
     showAlert('¡Listo!','Bracket guardado correctamente.');
   }catch(err){console.error(err);showAlert('Error',err.message)}
   finally{hideLoading()}
-// =================================================
-// FUNCIONES DEL INVITADO (BANCO PICHINCHA)
-// =================================================
-
+}
+  
 function getGuestBracketKoTeams(phase){
   if(phase==='r16'){
     var s=collectGuestBracketPhase('r32',OFFICIAL_R32);
@@ -1404,8 +1402,6 @@ function downloadGuestBracketPDF(){
   w.document.write(html);
   w.document.close();
 }
-}
-
 function getMaxGroupsScore(){
   var ar=serverData.adminResults||{};
   var n=Object.keys(ar).length;
