@@ -213,8 +213,14 @@ var GROUPS=[
 {g:'K',t:[{n:'Portugal',c:'pt'},{n:'RD Congo',c:'cd'},{n:'Uzbekistán',c:'uz'},{n:'Colombia',c:'co'}]},
 {g:'L',t:[{n:'Inglaterra',c:'gb-eng'},{n:'Croacia',c:'hr'},{n:'Ghana',c:'gh'},{n:'Panamá',c:'pa'}]}];
 
-function pickWinner(match,sh,sa){return sh>=sa?matchmatch[1]}
-function pickLoser(match,sh,sa){return sh>=sa?matchmatch[0]}
+function pickWinner(match,sh,sa){
+  if(sh>=sa){return match[0];}
+  return match[1];
+}
+function pickLoser(match,sh,sa){
+  if(sh>=sa){return match[1];}
+  return match[0];
+}
 
 function isKoClosed(){return new Date()>=KO_DEADLINE}
 function isPollaClosed(){return new Date()>=DEADLINE}
