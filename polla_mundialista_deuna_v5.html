@@ -222,7 +222,7 @@ var GH_BRANCH='main';
 var GH_API='https://api.github.com';
 var GH_TOKEN='';
 var ADMIN_HASH='f8353696b246417b08c7d85fb02cc27c1995bf5789fcdb9697de5c98050a58b8';
-var serverData={predictions:[],adminResults:{},adminKo:{},adminSha:null,adminKoSha:null};
+var serverData={predictions:[],adminResults:{},adminKo:{},adminExclusions:{groups:[],ko:[]},adminSha:null,adminKoSha:null,adminExclusionsSha:null};
 var lastScores=[];
 var DEADLINE=new Date('2026-06-11T19:00:00Z');
 var KO_DEADLINE=new Date('2026-06-30T20:00:00Z');
@@ -279,6 +279,11 @@ function pickLoser(match,sh,sa){
 }
 
 function isKoClosed(){return new Date()>=KO_DEADLINE}
+function isExcluded(category,key){
+  var excl=serverData.adminExclusions||{groups:[],ko:[]};
+  var list=category==='groups'?(excl.groups||[]):(excl.ko||[]);
+  return list.indexOf(key)>=0;
+}
 function isPollaClosed(){return new Date()>=DEADLINE}
 
 async function sha256(msg){
@@ -376,6 +381,12 @@ async function loadData(){
       try{var r3=await fetch(admKoInfo.download_url);serverData.adminKo=await r3.json()}
       catch(ex){serverData.adminKo={}}
     }else{serverData.adminKo={};serverData.adminKoSha=null}
+    var admExclInfo=await ghGet('data/admin_exclusions.json');
+    if(admExclInfo){
+      serverData.adminExclusionsSha=admExclInfo.sha;
+      try{var r4=await fetch(admExclInfo.download_url);serverData.adminExclusions=await r4.json()}
+      catch(ex){serverData.adminExclusions={groups:[],ko:[]}}
+    }else{serverData.adminExclusions={groups:[],ko:[]};serverData.adminExclusionsSha=null}
     updStats();
     refreshDash();
     if(IS_ADMIN){renderAdminUsers();renderAdminKoUI()}
@@ -432,7 +443,8 @@ function renderGroups(){
 function renderAdminGroups(){
   var box=document.getElementById('adminResUI');
   if(!box)return;
-  var html='';
+  var excl=(serverData.adminExclusions&&serverData.adminExclusions.groups)||[];
+  var html='<p style="color:var(--gr);font-size:.78rem;margin-bottom:10px">💡 Marca el checkbox 🚫 al lado de un partido para EXCLUIRLO del cálculo de puntos (útil para partidos ya jugados antes del deadline).</p>';
   for(var gi=0;gi<GROUPS.length;gi++){
     var g=GROUPS[gi];
     var ms=getMatches(g.t);
@@ -440,9 +452,13 @@ function renderAdminGroups(){
     for(var mi=0;mi<ms.length;mi++){
       var m=ms[mi];
       var mid='adm_g'+gi+'m'+mi;
+      var key='g'+gi+'m'+mi;
+      var checked=excl.indexOf(key)>=0?'checked':'';
       html+='<div class="mr"><span class="tn h">'+teamLbl(m[0])+'</span>';
       html+='<span class="sw"><input type="number" min="0" class="si" id="'+mid+'a"><span class="vs">vs</span><input type="number" min="0" class="si" id="'+mid+'b"></span>';
-      html+='<span class="tn a">'+teamLbl(m[1])+'</span></div>';
+      html+='<span class="tn a">'+teamLbl(m[1])+'</span>';
+      html+='<label style="display:flex;align-items:center;gap:4px;font-size:.7rem;color:#e74c3c;cursor:pointer;margin-left:8px"><input type="checkbox" id="excl_'+key+'" '+checked+' style="cursor:pointer"> 🚫</label>';
+      html+='</div>';
     }
     html+='</div>';
   }
@@ -482,13 +498,37 @@ async function saveAdminRes(){
   if(!needToken())return;
   var res=collectAdminResults();
   if(Object.keys(res).length===0){showAlert('Sin datos','Ingresa al menos un resultado.');return}
+  
+  // Recoger checkboxes de exclusión
+  var exclGroups=[];
+  for(var gi=0;gi<GROUPS.length;gi++){
+    var ms=getMatches(GROUPS[gi].t);
+    for(var mi=0;mi<ms.length;mi++){
+      var key='g'+gi+'m'+mi;
+      var cb=document.getElementById('excl_'+key);
+      if(cb&&cb.checked)exclGroups.push(key);
+    }
+  }
+  
   showLoading('Guardando...');
   try{
+    // Guardar resultados
     var payload=JSON.stringify(res,null,2);
     await ghPut('data/admin.json',payload,serverData.adminSha);
+    
+    // Guardar exclusiones (preservando las de KO)
+    var currentExcl=serverData.adminExclusions||{groups:[],ko:[]};
+    currentExcl.groups=exclGroups;
+    var exclPayload=JSON.stringify(currentExcl,null,2);
+    
+    // Re-fetch del sha de exclusiones para evitar conflictos
+    var exclInfo=await ghGet('data/admin_exclusions.json');
+    var exclSha=exclInfo?exclInfo.sha:null;
+    await ghPut('data/admin_exclusions.json',exclPayload,exclSha);
+    
     await loadData();
-    loadAdminInputs();
-    showAlert('Listo','Resultados guardados.');
+    renderAdminGroups();
+    showAlert('Listo','Resultados y exclusiones guardados. '+exclGroups.length+' partidos excluidos.');
   }catch(err){showAlert('Error',err.message)}
   finally{hideLoading()}
 }
@@ -754,29 +794,33 @@ function getKoTeams(phase){
 function renderAdminKoUI(){
   var box=document.getElementById('adminKoUI');
   if(!box)return;
+  var excl=(serverData.adminExclusions&&serverData.adminExclusions.ko)||[];
   var phases=[{k:'r32',label:'🔥 16VOS',matches:OFFICIAL_R32}];
   var r16=getKoTeams('r16');if(r16)phases.push({k:'r16',label:'⚡ OCTAVOS',matches:r16});
   var qf=getKoTeams('qf');if(qf)phases.push({k:'qf',label:'💥 CUARTOS',matches:qf});
   var sf=getKoTeams('sf');if(sf)phases.push({k:'sf',label:'🌟 SEMIS',matches:sf});
   var fn=getKoTeams('final');if(fn)phases.push({k:'final',label:'🏆 FINAL',matches:fn});
   var th=getKoTeams('third');if(th)phases.push({k:'third',label:'🥉 3ER PUESTO',matches:th});
-  var html='';
+  var html='<p style="color:var(--gr);font-size:.78rem;margin-bottom:10px">💡 Marca 🚫 al lado de un partido para EXCLUIRLO del cálculo (ej: partidos ya jugados antes del deadline).</p>';
   for(var p=0;p<phases.length;p++){
     var ph=phases[p];
     html+='<div class="gc"><div class="gt">'+ph.label+'</div>';
     for(var i=0;i<ph.matches.length;i++){
       var m=ph.matches[i];
       var mid='adm_ko_'+ph.k+'_'+i;
+      var key=ph.k+'_'+i;
+      var checked=excl.indexOf(key)>=0?'checked':'';
       html+='<div class="mr"><span class="tn h">'+teamLbl(m[0])+'</span>';
       html+='<span class="sw"><input type="number" min="0" class="si" id="'+mid+'a"><span class="vs">vs</span><input type="number" min="0" class="si" id="'+mid+'b"></span>';
-      html+='<span class="tn a">'+teamLbl(m[1])+'</span></div>';
+      html+='<span class="tn a">'+teamLbl(m[1])+'</span>';
+      html+='<label style="display:flex;align-items:center;gap:4px;font-size:.7rem;color:#e74c3c;cursor:pointer;margin-left:8px"><input type="checkbox" id="exclko_'+key+'" '+checked+' style="cursor:pointer"> 🚫</label>';
+      html+='</div>';
     }
     html+='</div>';
   }
   box.innerHTML=html;
   loadAdminKoInputs();
 }
-
 function loadAdminKoInputs(){
   var ko=serverData.adminKo||{};
   var phases=['r32','r16','qf','sf','final','third'];
@@ -819,17 +863,44 @@ function collectAdminKo(){
 async function saveAdminKo(){
   if(!needToken())return;
   var res=collectAdminKo();
+  
+  // Recoger checkboxes de exclusión KO
+  var exclKo=[];
+  var phases=[{k:'r32',m:OFFICIAL_R32}];
+  var r16=getKoTeams('r16');if(r16)phases.push({k:'r16',m:r16});
+  var qf=getKoTeams('qf');if(qf)phases.push({k:'qf',m:qf});
+  var sf=getKoTeams('sf');if(sf)phases.push({k:'sf',m:sf});
+  var fn=getKoTeams('final');if(fn)phases.push({k:'final',m:fn});
+  var th=getKoTeams('third');if(th)phases.push({k:'third',m:th});
+  for(var p=0;p<phases.length;p++){
+    var ph=phases[p];
+    for(var i=0;i<ph.m.length;i++){
+      var key=ph.k+'_'+i;
+      var cb=document.getElementById('exclko_'+key);
+      if(cb&&cb.checked)exclKo.push(key);
+    }
+  }
+  
   showLoading('Guardando...');
   try{
     var payload=JSON.stringify(res,null,2);
     await ghPut('data/admin_ko.json',payload,serverData.adminKoSha);
+    
+    // Guardar exclusiones (preservando las de grupos)
+    var currentExcl=serverData.adminExclusions||{groups:[],ko:[]};
+    currentExcl.ko=exclKo;
+    var exclPayload=JSON.stringify(currentExcl,null,2);
+    
+    var exclInfo=await ghGet('data/admin_exclusions.json');
+    var exclSha=exclInfo?exclInfo.sha:null;
+    await ghPut('data/admin_exclusions.json',exclPayload,exclSha);
+    
     await loadData();
     renderAdminKoUI();
-    showAlert('Listo','Resultados eliminatorias guardados.');
+    showAlert('Listo','Resultados eliminatorias guardados. '+exclKo.length+' partidos excluidos.');
   }catch(err){showAlert('Error',err.message)}
   finally{hideLoading()}
 }
-
 function openBracketModal(file,sha){
   var pred=null;
   for(var i=0;i<serverData.predictions.length;i++){
@@ -1415,7 +1486,11 @@ function downloadGuestBracketPDF(){
 }
 function getMaxGroupsScore(){
   var ar=serverData.adminResults||{};
-  var n=Object.keys(ar).length;
+  var keys=Object.keys(ar);
+  var n=0;
+  for(var i=0;i<keys.length;i++){
+    if(!isExcluded('groups',keys[i]))n++;
+  }
   return n*3;
 }
 
@@ -1428,7 +1503,10 @@ function getMaxKoScore(){
     var phRes=ko[ph]||{};
     var keys=Object.keys(phRes);
     var s=KO_SCORING[ph];
-    max+=keys.length*(s.w+s.e);
+    for(var ki=0;ki<keys.length;ki++){
+      if(isExcluded('ko',keys[ki]))continue;
+      max+=(s.w+s.e);
+    }
   }
   return max;
 }
@@ -1440,6 +1518,7 @@ function calcGroupsScore(pd){
   var grps=pd.groups||{};
   for(var ki=0;ki<keys.length;ki++){
     var k=keys[ki];
+    if(isExcluded('groups',k))continue;
     var real=ar[k];
     var pred=grps[k];
     if(!pred||!real)continue;
@@ -1455,7 +1534,6 @@ function calcGroupsScore(pd){
   }
   return {pts:pts,exact:exact,res:res};
 }
-
 function calcKoScore(pd){
   var ko=serverData.adminKo||{};
   var koP=pd.ko_predictions||{};
@@ -1469,6 +1547,7 @@ function calcKoScore(pd){
     var s=KO_SCORING[ph];
     for(var ki=0;ki<keys.length;ki++){
       var k=keys[ki];
+      if(isExcluded('ko',k))continue;
       var real=phRes[k];
       var pred=phPred[k];
       if(!pred||!real)continue;
@@ -1485,7 +1564,6 @@ function calcKoScore(pd){
   }
   return {pts:pts,exact:exact,res:res};
 }
-
 function calcScores(){
   var deuna=[],guests=[];
   var maxG=getMaxGroupsScore();
@@ -1536,6 +1614,30 @@ function refreshDash(){
   var deunaScores=scoresObj.deuna;
   var guestScores=scoresObj.guests;
   var allScores=scoresObj.all;
+  // Mostrar partidos excluidos arriba del dashboard
+  var excl=serverData.adminExclusions||{groups:[],ko:[]};
+  var totalExcl=(excl.groups||[]).length+(excl.ko||[]).length;
+  var exclBox=document.getElementById('exclusionsBox');
+  if(!exclBox){
+    var dashTab=document.getElementById('tab_dash');
+    if(dashTab){
+      var ct=dashTab.querySelector('.ct');
+      if(ct){
+        exclBox=document.createElement('div');
+        exclBox.id='exclusionsBox';
+        exclBox.style.cssText='background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:.82rem;color:#ffaaaa;display:none';
+        ct.insertBefore(exclBox,ct.querySelector('.sr'));
+      }
+    }
+  }
+  if(exclBox){
+    if(totalExcl>0){
+      exclBox.style.display='block';
+      exclBox.innerHTML='🚫 <strong>'+totalExcl+' partidos excluidos del cálculo</strong> (partidos que ya se jugaron antes del deadline o que el admin decidió no contar). Esto aplica a TODOS por igual para mantener justicia.';
+    }else{
+      exclBox.style.display='none';
+    }
+  }
   
   // Gráfico de barras (top 15 general)
   var maxPts=allScores.length>0?Math.max(allScores[0].total,1):1;
