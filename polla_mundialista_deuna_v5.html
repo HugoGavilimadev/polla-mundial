@@ -106,6 +106,11 @@ footer{text-align:center;padding:20px;color:var(--gr);font-size:.75rem;border-to
 .btn-ko{background:linear-gradient(135deg,var(--g),#2ea88a);color:#fff;border:none;padding:8px 14px;border-radius:18px;font-size:.78rem;font-weight:700;cursor:pointer}
 .btn-ko.done{background:rgba(56,192,158,.15);color:var(--g);border:1px solid var(--g);cursor:not-allowed}
 .btn-ko.unlock{background:linear-gradient(135deg,var(--go),#ffa500);color:#000}
+.btn-tab{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:var(--gr);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:.82rem;font-weight:600;transition:.3s}
+.btn-tab.active{background:linear-gradient(135deg,var(--p),#4a1a6b);color:#fff;border-color:var(--p)}
+.btn-tab:hover{background:rgba(255,255,255,.15)}
+.guest-badge{background:#ffd700;color:#000;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700;margin-left:6px}
+.deuna-badge{background:var(--p);color:#fff;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700;margin-left:6px}
 @media(max-width:768px){header h1{font-size:1.15rem}nav button{padding:8px 12px;font-size:.76rem}.mr{flex-direction:column;gap:4px;padding:10px 8px}.tn.h,.tn.a{justify-content:center;flex:none;width:100%}.sw{justify-content:center}.si{width:54px;height:44px;font-size:1.15rem}.ic{grid-template-columns:1fr}.fg{width:20px;height:15px}.btn{width:100%;max-width:400px}.btn.sm{width:auto}.bkmodal-content{padding:14px}}
 </style></head><body>
 <div class="lo" id="lo"><div class="spn"></div><p id="loTxt">Cargando datos...</p></div>
@@ -119,6 +124,7 @@ footer{text-align:center;padding:20px;color:var(--gr);font-size:.75rem;border-to
 </div></div>
 <header><h1>⚽ POLLA MUNDIALISTA DEUNA 🏆</h1><div class="sub">FIFA World Cup 2026</div><nav>
 <button id="navHome" class="active" onclick="showTab('home')">🏠 Inicio</button>
+<button id="navGuest" onclick="showTab('guest')">👥 Soy Invitado</button>
 <button id="navDash" onclick="showTab('dash')">📊 Dashboard</button>
 </nav></header>
 <div class="tab active" id="tab_home"><div class="ct"><div class="hero"><div style="font-size:4.5rem">🏆</div>
@@ -128,6 +134,37 @@ footer{text-align:center;padding:20px;color:var(--gr);font-size:.75rem;border-to
 <div class="ic"><div class="icd"><h3>📋 ¿Cómo participar?</h3><p>Ve al Dashboard y haz clic en el botón "Ingresar bracket" al lado de tu nombre.</p></div>
 <div class="icd"><h3>⭐ Puntos</h3><p><strong>Grupos: 50%</strong><br><strong>Eliminatorias: 50%</strong></p></div>
 <div class="icd"><h3>🏆 Deadline bracket</h3><p>Hasta el martes 30 de junio 3 PM (Ecuador).</p></div></div></div></div></div>
+<div class="tab" id="tab_guest"><div class="ct">
+<div class="fh" style="border-color:#ffd700">
+<h2 style="color:#ffd700">🏛️ Invitado Banco Pichincha</h2>
+<p style="color:var(--gr);margin-bottom:12px;font-size:.9rem">
+<strong style="color:#e74c3c">⚠ Si eres de DEUNA, NO uses esta pestaña.</strong> Esta sección es exclusiva para colaboradores de Banco Pichincha que se suman al 2do pronóstico.
+</p>
+<p style="color:var(--gr);margin-bottom:12px;font-size:.85rem">
+🎯 Tu score se calculará al <strong>100%</strong> con base en tus pronósticos de 16vos hasta la Final.
+</p>
+<input type="text" class="fi" id="guestName" placeholder="Tu nombre completo">
+<input type="text" class="fi" id="guestArea" placeholder="Tu área en Banco Pichincha (ej: Tarjetas, Riesgo)">
+</div>
+
+<div class="tk"><h4>🔑 Token GitHub (necesario para guardar)</h4>
+<input type="password" id="guestToken" placeholder="Pega el token compartido por el admin">
+<button class="btn sm" onclick="saveGuestToken()" style="margin-top:6px">💾 Guardar token</button>
+<span class="saved" id="guestTkSaved"> ✓ Guardado</span>
+<small>📌 Pídele el token al administrador. Se guarda solo en tu navegador.</small></div>
+
+<div class="st">⚽ Llena tu Bracket — Mundial 2026</div>
+<p style="color:var(--gr);font-size:.85rem;margin-bottom:15px">Llena los 16vos. Conforme avances, haz clic en <strong>"Calcular siguiente fase"</strong> para que aparezcan Octavos, Cuartos, Semis y Final.</p>
+
+<div id="guestBracketBody"></div>
+
+<div style="text-align:center;margin-top:20px">
+<button class="btn" onclick="recalcGuestBracket()">🔄 Calcular siguiente fase</button>
+<button class="btn go" onclick="saveGuestBracket()">💾 GUARDAR MI PRONÓSTICO</button>
+<button class="btn pp" onclick="downloadGuestBracketPDF()">📄 DESCARGAR PDF</button>
+</div>
+
+</div></div>
 <div class="tab" id="tab_pred"><div class="ct">
 <div class="fh"><h2>⚽ Mi Pronóstico (Fase de Grupos)</h2>
 <p style="color:var(--gr);margin-bottom:12px"><strong style="color:#e74c3c">⚠ La fase de grupos ya cerró.</strong> Esta pestaña queda solo para referencia.</p>
@@ -145,11 +182,28 @@ footer{text-align:center;padding:20px;color:var(--gr);font-size:.75rem;border-to
 <small>📌 Pídele el token al administrador. Se guarda solo en tu navegador y se necesita para que puedas registrar tu pronóstico.</small></div>
 <div class="sr"><div class="sc"><div class="n" id="dPart">0</div><div class="l">Participantes</div></div><div class="sc"><div class="n" id="dPlayed">0</div><div class="l">Resultados</div></div><div class="sc"><div class="n" id="dLeader">—</div><div class="l">Líder</div></div></div>
 <div class="cb"><h3 style="color:var(--g);margin-bottom:10px">Puntuación</h3><div id="barChart"></div></div>
-<div style="overflow-x:auto"><table class="rt"><thead><tr><th>#</th><th>Nombre</th><th>Fase Grupos</th><th>Fase Final</th><th>Total</th><th>Nuevo Pronóstico</th></tr></thead><tbody id="rankBody"></tbody></table></div>
+<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center">
+<button class="btn-tab active" id="tabDeuna" onclick="switchRankTab('deuna')">🟣 DEUNA</button>
+<button class="btn-tab" id="tabBanco" onclick="switchRankTab('banco')">🟡 Banco Pichincha</button>
+<button class="btn-tab" id="tabGeneral" onclick="switchRankTab('general')">🌐 General</button>
+</div>
+
+<div id="rankTabDeuna" class="rank-content" style="overflow-x:auto">
+<table class="rt"><thead><tr><th>#</th><th>Nombre</th><th>Grupos</th><th>Final</th><th>Total</th><th>2do Pronóstico</th></tr></thead><tbody id="rankBody"></tbody></table>
+</div>
+
+<div id="rankTabBanco" class="rank-content" style="display:none;overflow-x:auto">
+<table class="rt"><thead><tr><th>#</th><th>Nombre</th><th>Área</th><th>Total</th><th>2do Pronóstico</th></tr></thead><tbody id="rankBodyGuests"></tbody></table>
+</div>
+
+<div id="rankTabGeneral" class="rank-content" style="display:none;overflow-x:auto">
+<table class="rt"><thead><tr><th>#</th><th>Nombre</th><th>Empresa</th><th>Total</th></tr></thead><tbody id="rankBodyGeneral"></tbody></table>
+</div>
 <div style="text-align:center;margin:14px 0"><button class="btn sm pp" onclick="exportCSV()">CSV</button><button class="btn sm pp" onclick="exportJSON()">JSON</button><button class="btn sm" onclick="loadData()">🔄 Actualizar</button></div>
 <div class="ap"><h3>🔐 Admin</h3><div class="al"><input type="password" id="adminPw" placeholder="Contraseña"><button onclick="loginAdmin()">Acceder</button></div>
 <div class="adc" id="adminC">
-<h4 style="color:var(--g);margin:12px 0 6px">👥 Participantes</h4><div id="userList"></div>
+<h4 style="color:var(--g);margin:12px 0 6px">👥 Participantes DEUNA</h4><div id="userList"></div>
+<h4 style="color:#ffd700;margin:18px 0 6px">🏛️ Invitados Banco Pichincha</h4><div id="userListGuests"></div>
 <hr class="sep">
 <h4 style="color:var(--g);margin:12px 0 6px">⚽ Resultados Fase de Grupos</h4>
 <div id="adminResUI"></div>
@@ -175,7 +229,7 @@ var KO_DEADLINE=new Date('2026-06-30T20:00:00Z');
 var IS_ADMIN=false;
 var currentBracketUser=null;
 var bracketState={r32:null,r16:null,qf:null,sf:null,final:null,third:null};
-
+var guestBracketState={r32:null,r16:null,qf:null,sf:null,final:null,third:null};
 var OFFICIAL_R32=[
 [{n:'Sudáfrica',c:'za'},{n:'Canadá',c:'ca'}],
 [{n:'Brasil',c:'br'},{n:'Japón',c:'jp'}],
@@ -234,7 +288,13 @@ async function sha256(msg){
 
 function loadToken(){
   var t=localStorage.getItem('polla_gh_token');
-  if(t){GH_TOKEN=t;var inp=document.getElementById('ghTokenInput');if(inp)inp.value=t;var sv=document.getElementById('tkSaved');if(sv)sv.style.display='inline'}
+  if(t){
+    GH_TOKEN=t;
+    var inp=document.getElementById('ghTokenInput');if(inp)inp.value=t;
+    var sv=document.getElementById('tkSaved');if(sv)sv.style.display='inline';
+    var inp2=document.getElementById('guestToken');if(inp2)inp2.value=t;
+    var sv2=document.getElementById('guestTkSaved');if(sv2)sv2.style.display='inline';
+  }
 }
 
 function saveToken(){
@@ -244,6 +304,17 @@ function saveToken(){
   localStorage.setItem('polla_gh_token',GH_TOKEN);
   var sv=document.getElementById('tkSaved');if(sv)sv.style.display='inline';
   showAlert('Listo','Token guardado.');
+}
+
+function saveGuestToken(){
+  var inp=document.getElementById('guestToken');
+  if(!inp||!inp.value.trim()){showAlert('Error','Pega el token');return}
+  GH_TOKEN=inp.value.trim();
+  localStorage.setItem('polla_gh_token',GH_TOKEN);
+  var sv=document.getElementById('guestTkSaved');if(sv)sv.style.display='inline';
+  var sv2=document.getElementById('tkSaved');if(sv2)sv2.style.display='inline';
+  var inp2=document.getElementById('ghTokenInput');if(inp2)inp2.value=GH_TOKEN;
+  showAlert('Listo','Token guardado. Ahora puedes llenar tu bracket.');
 }
 
 function needToken(){
@@ -330,6 +401,7 @@ function showTab(id){
   var nb=document.getElementById('nav'+id.charAt(0).toUpperCase()+id.slice(1));
   if(nb)nb.classList.add('active');
   if(id==='dash'){loadData();loadToken();}
+  if(id==='guest'){loadToken();renderGuestBracket();}
 }
 
 function renderGroups(){
@@ -996,6 +1068,342 @@ async function saveBracketKO(){
     showAlert('¡Listo!','Bracket guardado correctamente.');
   }catch(err){console.error(err);showAlert('Error',err.message)}
   finally{hideLoading()}
+// =================================================
+// FUNCIONES DEL INVITADO (BANCO PICHINCHA)
+// =================================================
+
+function getGuestBracketKoTeams(phase){
+  if(phase==='r16'){
+    var s=collectGuestBracketPhase('r32',OFFICIAL_R32);
+    if(!s.complete)return null;
+    var winners=[];
+    for(var i=0;i<OFFICIAL_R32.length;i++){
+      var r=s.data['r32_'+i];
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      winners.push(pickWinner(OFFICIAL_R32[i],sh,sa));
+    }
+    var pairs=[];
+    for(var j=0;j<BRACKET_R16.length;j++){
+      pairs.push([winners[BRACKET_R16[j][0]],winners[BRACKET_R16[j][1]]]);
+    }
+    return pairs;
+  }
+  if(phase==='qf'){
+    var r16t=getGuestBracketKoTeams('r16');
+    if(!r16t)return null;
+    var s=collectGuestBracketPhase('r16',r16t);
+    if(!s.complete)return null;
+    var winners=[];
+    for(var i=0;i<r16t.length;i++){
+      var r=s.data['r16_'+i];
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      winners.push(pickWinner(r16t[i],sh,sa));
+    }
+    var pairs=[];
+    for(var j=0;j<BRACKET_QF.length;j++){
+      pairs.push([winners[BRACKET_QF[j][0]],winners[BRACKET_QF[j][1]]]);
+    }
+    return pairs;
+  }
+  if(phase==='sf'){
+    var qft=getGuestBracketKoTeams('qf');
+    if(!qft)return null;
+    var s=collectGuestBracketPhase('qf',qft);
+    if(!s.complete)return null;
+    var winners=[];
+    for(var i=0;i<qft.length;i++){
+      var r=s.data['qf_'+i];
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      winners.push(pickWinner(qft[i],sh,sa));
+    }
+    var pairs=[];
+    for(var j=0;j<BRACKET_SF.length;j++){
+      pairs.push([winners[BRACKET_SF[j][0]],winners[BRACKET_SF[j][1]]]);
+    }
+    return pairs;
+  }
+  if(phase==='final'){
+    var sft=getGuestBracketKoTeams('sf');
+    if(!sft)return null;
+    var s=collectGuestBracketPhase('sf',sft);
+    if(!s.complete)return null;
+    var winners=[];
+    for(var i=0;i<sft.length;i++){
+      var r=s.data['sf_'+i];
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      winners.push(pickWinner(sft[i],sh,sa));
+    }
+    return [[winners[0],winners[1]]];
+  }
+  if(phase==='third'){
+    var sft=getGuestBracketKoTeams('sf');
+    if(!sft)return null;
+    var s=collectGuestBracketPhase('sf',sft);
+    if(!s.complete)return null;
+    var losers=[];
+    for(var i=0;i<sft.length;i++){
+      var r=s.data['sf_'+i];
+      var sh=parseInt(r.sh),sa=parseInt(r.sa);
+      losers.push(pickLoser(sft[i],sh,sa));
+    }
+    return [[losers[0],losers[1]]];
+  }
+  return null;
+}
+
+function collectGuestBracketPhase(phase,matches){
+  var data={};
+  var complete=true;
+  for(var i=0;i<matches.length;i++){
+    var ea=document.getElementById('gst_'+phase+'_'+i+'a');
+    var eb=document.getElementById('gst_'+phase+'_'+i+'b');
+    if(!ea||!eb||ea.value===''||eb.value===''){complete=false;continue}
+    var sh=parseInt(ea.value),sa=parseInt(eb.value);
+    if(isNaN(sh)||isNaN(sa)){complete=false;continue}
+    data[phase+'_'+i]={sh:ea.value,sa:eb.value};
+  }
+  return {complete:complete,data:data};
+}
+
+function renderGuestPhase(phase,title,matches){
+  var html='<div style="margin-bottom:20px"><div class="bkphase-title">'+title+'</div>';
+  for(var i=0;i<matches.length;i++){
+    var m=matches[i];
+    var mid='gst_'+phase+'_'+i;
+    html+='<div class="mr"><span class="tn h">'+teamLbl(m[0])+'</span>';
+    html+='<span class="sw"><input type="number" min="0" class="si" id="'+mid+'a"><span class="vs">vs</span><input type="number" min="0" class="si" id="'+mid+'b"></span>';
+    html+='<span class="tn a">'+teamLbl(m[1])+'</span></div>';
+  }
+  html+='</div>';
+  var saved=guestBracketState[phase]||{};
+  setTimeout(function(){
+    var keys=Object.keys(saved);
+    for(var k=0;k<keys.length;k++){
+      var key=keys[k];
+      var ea=document.getElementById('gst_'+key+'a');
+      var eb=document.getElementById('gst_'+key+'b');
+      if(ea&&saved[key].sh!==undefined)ea.value=saved[key].sh;
+      if(eb&&saved[key].sa!==undefined)eb.value=saved[key].sa;
+    }
+  },50);
+  return html;
+}
+
+function renderGuestBracket(){
+  var body=document.getElementById('guestBracketBody');
+  if(!body)return;
+  var html=renderGuestPhase('r32','🔥 16VOS — 16 partidos',OFFICIAL_R32);
+  var r16t=getGuestBracketKoTeams('r16');if(r16t)html+=renderGuestPhase('r16','⚡ OCTAVOS — 8 partidos',r16t);
+  var qft=getGuestBracketKoTeams('qf');if(qft)html+=renderGuestPhase('qf','💥 CUARTOS — 4 partidos',qft);
+  var sft=getGuestBracketKoTeams('sf');if(sft)html+=renderGuestPhase('sf','🌟 SEMIS — 2 partidos',sft);
+  var fnt=getGuestBracketKoTeams('final');if(fnt)html+=renderGuestPhase('final','🏆 FINAL',fnt);
+  var tht=getGuestBracketKoTeams('third');if(tht)html+=renderGuestPhase('third','🥉 3ER PUESTO',tht);
+  body.innerHTML=html;
+}
+
+function recalcGuestBracket(){
+  var phases=['r32','r16','qf','sf','final','third'];
+  for(var p=0;p<phases.length;p++){
+    var ph=phases[p];
+    var matches;
+    if(ph==='r32')matches=OFFICIAL_R32;
+    else matches=getGuestBracketKoTeams(ph);
+    if(matches){
+      var s=collectGuestBracketPhase(ph,matches);
+      guestBracketState[ph]=s.data;
+    }
+  }
+  renderGuestBracket();
+}
+
+async function saveGuestBracket(){
+  if(isKoClosed()){
+    showAlert('Cerrado','El registro de invitados cerró el 30 de junio a las 3 PM.');
+    return;
+  }
+  if(!needToken())return;
+  
+  var name=document.getElementById('guestName').value.trim();
+  var area=document.getElementById('guestArea').value.trim();
+  
+  if(!name){showAlert('Falta nombre','Ingresa tu nombre completo.');return}
+  if(!area){showAlert('Falta área','Ingresa tu área en Banco Pichincha.');return}
+  
+  // Forzar recálculo
+  var phases=['r32','r16','qf','sf','final','third'];
+  for(var p=0;p<phases.length;p++){
+    var ph=phases[p];
+    var matches;
+    if(ph==='r32')matches=OFFICIAL_R32;
+    else matches=getGuestBracketKoTeams(ph);
+    if(matches){
+      var sTmp=collectGuestBracketPhase(ph,matches);
+      guestBracketState[ph]=sTmp.data;
+    }
+  }
+  
+  showLoading('Validando bracket...');
+  try{
+    var koPredictions={};
+    var faltantes=[];
+    
+    for(var p=0;p<phases.length;p++){
+      var ph=phases[p];
+      var matches;
+      if(ph==='r32')matches=OFFICIAL_R32;
+      else matches=getGuestBracketKoTeams(ph);
+      
+      if(!matches){faltantes.push(ph.toUpperCase());continue}
+      var s=collectGuestBracketPhase(ph,matches);
+      if(!s.complete){faltantes.push(ph.toUpperCase());continue}
+      koPredictions[ph]=s.data;
+    }
+    
+    if(faltantes.length>0){
+      hideLoading();
+      showAlert('Bracket incompleto','Falta llenar: '+faltantes.join(', ')+'. Haz clic en "Calcular siguiente fase" para generar las fases pendientes.');
+      return;
+    }
+    
+    // Verificar si ya existe
+    var fileName='guest_'+safeName(name)+'.json';
+    var path='data/predictions/'+fileName;
+    
+    showLoading('Verificando...');
+    var existing=await ghGet(path);
+    if(existing){
+      hideLoading();
+      showAlert('Ya registrado','Ya existe un pronóstico con el nombre "'+name+'". Si necesitas modificarlo, contacta al administrador.');
+      return;
+    }
+    
+    showLoading('Guardando tu pronóstico...');
+    var userData={
+      name:name,
+      area:area,
+      is_guest:true,
+      data:{
+        groups:{},
+        ko_predictions:koPredictions,
+        ko_submitted:true,
+        ko_unlock:false
+      }
+    };
+    
+    var payload=JSON.stringify(userData,null,2);
+    await ghPut(path,payload,null);
+    
+    confetti();
+    showAlert('¡Listo!','Tu pronóstico se guardó correctamente. ¡Mucha suerte! 🍀');
+    
+    // Limpiar formulario
+    document.getElementById('guestName').value='';
+    document.getElementById('guestArea').value='';
+    guestBracketState={r32:null,r16:null,qf:null,sf:null,final:null,third:null};
+    renderGuestBracket();
+    
+  }catch(err){
+    console.error('Error completo:',err);
+    showAlert('Error',err.message);
+  }finally{hideLoading()}
+}
+
+function downloadGuestBracketPDF(){
+  var name=document.getElementById('guestName').value.trim();
+  var area=document.getElementById('guestArea').value.trim();
+  
+  if(!name){
+    showAlert('Falta nombre','Ingresa tu nombre antes de descargar el PDF.');
+    return;
+  }
+  
+  // Forzar recálculo
+  var phases=['r32','r16','qf','sf','final','third'];
+  for(var p=0;p<phases.length;p++){
+    var ph=phases[p];
+    var matches;
+    if(ph==='r32')matches=OFFICIAL_R32;
+    else matches=getGuestBracketKoTeams(ph);
+    if(matches){
+      var sTmp=collectGuestBracketPhase(ph,matches);
+      guestBracketState[ph]=sTmp.data;
+    }
+  }
+  
+  var w=window.open('','_blank');
+  if(!w){showAlert('Error','Habilita popups para descargar el PDF.');return}
+  
+  var fechaHora=new Date().toLocaleString('es-EC',{dateStyle:'long',timeStyle:'short'});
+  
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Pronóstico - '+name+'</title>';
+  html+='<style>';
+  html+='body{font-family:Arial,sans-serif;padding:30px;color:#1a0a2e;max-width:800px;margin:0 auto}';
+  html+='h1{color:#ffd700;text-align:center;border-bottom:3px solid #662d91;padding-bottom:10px;background:#1a0a2e;padding:15px;border-radius:8px}';
+  html+='h2{color:#662d91;margin-top:25px;border-left:4px solid #ffd700;padding-left:10px}';
+  html+='.header-info{background:#fff8dc;padding:15px;border-radius:10px;margin-bottom:20px;text-align:center;border:2px solid #ffd700}';
+  html+='.header-info strong{color:#662d91;font-size:1.2rem}';
+  html+='.match{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #ddd;page-break-inside:avoid}';
+  html+='.team{flex:1;font-weight:600}';
+  html+='.team.home{text-align:right;padding-right:15px}';
+  html+='.team.away{text-align:left;padding-left:15px}';
+  html+='.score{background:#662d91;color:#fff;padding:5px 12px;border-radius:8px;font-weight:bold;min-width:60px;text-align:center;margin:0 10px}';
+  html+='.vs{color:#999;margin:0 8px}';
+  html+='.footer{margin-top:40px;text-align:center;color:#666;font-size:.85rem;border-top:1px solid #ddd;padding-top:15px}';
+  html+='.warning{background:#fff3cd;border:1px solid #ffd700;padding:10px;border-radius:8px;margin-top:20px;text-align:center;font-size:.9rem}';
+  html+='@media print{body{padding:15px}.match{page-break-inside:avoid}}';
+  html+='</style></head><body>';
+  
+  html+='<h1>🏛️ POLLA MUNDIALISTA — INVITADO BANCO PICHINCHA</h1>';
+  html+='<div class="header-info">';
+  html+='<strong>'+name+'</strong><br>';
+  html+='Área: <strong>'+area+'</strong><br>';
+  html+='<small>Generado el '+fechaHora+'</small>';
+  html+='</div>';
+  
+  var phasesInfo=[
+    {k:'r32',label:'🔥 16VOS DE FINAL',matches:OFFICIAL_R32},
+    {k:'r16',label:'⚡ OCTAVOS DE FINAL',matches:getGuestBracketKoTeams('r16')},
+    {k:'qf',label:'💥 CUARTOS DE FINAL',matches:getGuestBracketKoTeams('qf')},
+    {k:'sf',label:'🌟 SEMIFINALES',matches:getGuestBracketKoTeams('sf')},
+    {k:'third',label:'🥉 TERCER PUESTO',matches:getGuestBracketKoTeams('third')},
+    {k:'final',label:'🏆 FINAL',matches:getGuestBracketKoTeams('final')}
+  ];
+  
+  for(var p=0;p<phasesInfo.length;p++){
+    var ph=phasesInfo[p];
+    if(!ph.matches)continue;
+    var state=guestBracketState[ph.k]||{};
+    
+    html+='<h2>'+ph.label+'</h2>';
+    for(var i=0;i<ph.matches.length;i++){
+      var m=ph.matches[i];
+      var key=ph.k+'_'+i;
+      var pred=state[key];
+      var sh=pred?pred.sh:'-';
+      var sa=pred?pred.sa:'-';
+      
+      html+='<div class="match">';
+      html+='<div class="team home">'+m[0].n+'</div>';
+      html+='<div class="score">'+sh+'</div>';
+      html+='<div class="vs">vs</div>';
+      html+='<div class="score">'+sa+'</div>';
+      html+='<div class="team away">'+m[1].n+'</div>';
+      html+='</div>';
+    }
+  }
+  
+  html+='<div class="warning">⚠️ Recuerda: este PDF es solo respaldo. Tu pronóstico oficial es el guardado en la plataforma.</div>';
+  html+='<div class="footer">';
+  html+='🏛️ Polla Mundialista DEUNA 2026 — Sección Invitados Banco Pichincha<br>';
+  html+='Participante: <strong>'+name+'</strong> · Área: <strong>'+area+'</strong>';
+  html+='</div>';
+  
+  html+='<script>window.onload=function(){setTimeout(function(){window.print();},500);}<\/script>';
+  html+='</body></html>';
+  
+  w.document.write(html);
+  w.document.close();
+}
 }
 
 function getMaxGroupsScore(){
